@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adidas - Dashboard Planificador de Pantallas 2026</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        .adidas-black { background-color: #000000; }
+        .accent-yellow { color: #E2EC3B; }
+        .bg-accent-yellow { background-color: #E2EC3B; }
+        .accordion-content { transition: max-height 0.3s ease-out, opacity 0.2s ease-out; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen">
+
+    <!-- Header / Navbar -->
+    <header class="adidas-black text-white px-6 py-4 shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <i class="fa-brands fa-adidas text-4xl text-white"></i>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wider">PLANIFICADOR DE PANTALLAS 2026</h1>
+                    <p class="text-xs text-gray-400">Control de Campañas, Telemetría y Soporte Técnico</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="bg-green-600 text-white text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1.5">
+                    <span class="w-2 h-2 bg-white rounded-full animate-ping"></span> Sistema Online
+                </span>
+                <span class="text-xs text-gray-400">Septiembre 2026</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- KPIs Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div class="text-gray-500 text-xs font-semibold uppercase">Total Pantallas</div>
+                <div class="text-2xl font-black mt-1">39</div>
+                <div class="text-xs text-green-600 mt-1"><i class="fa-solid fa-store"></i> 15 Sucursales</div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div class="text-gray-500 text-xs font-semibold uppercase">Campañas Activas</div>
+                <div class="text-2xl font-black mt-1">18</div>
+                <div class="text-xs text-blue-600 mt-1"><i class="fa-solid fa-bullhorn"></i> Agrupadas</div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div class="text-gray-500 text-xs font-semibold uppercase">Estatus Operativo</div>
+                <div class="text-2xl font-black mt-1 text-green-600">92.3%</div>
+                <div class="text-xs text-gray-500 mt-1">36 Online | 2 Adv | 1 Off</div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div class="text-gray-500 text-xs font-semibold uppercase">Tickets Soporte</div>
+                <div class="text-2xl font-black mt-1 text-amber-600">3</div>
+                <div class="text-xs text-amber-700 mt-1"><i class="fa-solid fa-ticket"></i> Requieren Atención</div>
+            </div>
+        </div>
+
+        <!-- Filtros y Controles -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-3 items-center justify-between">
+            <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+                <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+                <input type="text" id="searchInput" placeholder="Buscar por campaña, sucursal, ID o pantalla..." class="w-full bg-gray-50 border border-gray-300 text-sm rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-black">
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleAll(true)" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg font-medium transition">
+                    <i class="fa-solid fa-folder-open"></i> Expandir Todo
+                </button>
+                <button onclick="toggleAll(false)" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg font-medium transition">
+                    <i class="fa-solid fa-folder"></i> Colapsar Todo
+                </button>
+            </div>
+        </div>
+
+        <!-- Contenedor Agrupado por Campañas -->
+        <div id="campaignsContainer" class="space-y-4"></div>
+
+    </main>
+
+    <!-- Modal Stats -->
+    <div id="statsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl relative">
+            <button onclick="closeModal('statsModal')" class="absolute top-4 right-4 text-gray-400 hover:text-black text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-lg font-bold flex items-center gap-2" id="modalCampaignTitle"><i class="fa-solid fa-chart-line text-blue-600"></i> Estadísticas de Campaña</h3>
+            <p class="text-xs text-gray-500 mt-1">Métricas de reproducción y Share of Voice en tiempo real.</p>
+            <div class="mt-4 space-y-4">
+                <div class="h-48">
+                    <canvas id="campaignChart"></canvas>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="bg-gray-50 p-2 rounded-lg"><span class="text-gray-500">Playbacks Hoy</span><p class="font-bold text-sm">1,420</p></div>
+                    <div class="bg-gray-50 p-2 rounded-lg"><span class="text-gray-500">Share of Voice</span><p class="font-bold text-sm">25%</p></div>
+                    <div class="bg-gray-50 p-2 rounded-lg"><span class="text-gray-500">Uptime Promedio</span><p class="font-bold text-sm text-green-600">99.2%</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Status / Telemetría -->
+    <div id="statusModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="closeModal('statusModal')" class="absolute top-4 right-4 text-gray-400 hover:text-black text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-microchip text-green-600"></i> Telemetría de Posición</h3>
+            <div id="statusContent" class="mt-4 space-y-3 text-sm"></div>
+        </div>
+    </div>
+
+    <!-- Modal Ticket -->
+    <div id="ticketModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="closeModal('ticketModal')" class="absolute top-4 right-4 text-gray-400 hover:text-black text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-ticket text-amber-600"></i> Ticket de Soporte Técnico</h3>
+            <div id="ticketContent" class="mt-4 space-y-3 text-sm"></div>
+        </div>
+    </div>
+
+    <script>
+        const screensData = [
+            { id: 'ADI-0001', sucursal: 'Fuencarral - Nuevo Centro', direccion: 'Duarte Quiros 1400, Cordoba', pantalla: 'Led Ingreso', res: '540x540', orientacion: 'Horizontal', camp: 'AdistarFamily', estado: 'Sin solicitud', aprov: 'Aprobado', status: 'Offline', ticket: '#TK-8801 - En Revisión', drive: 'https://drive.google.com' },
+            { id: 'ADI-0002', sucursal: 'Basket Capital', direccion: 'Av. Cabildo 1975, CABA', pantalla: 'Led Originals', res: '1024x192', orientacion: 'Horizontal', camp: 'Originals-Basket', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0003', sucursal: 'Basket Capital', direccion: 'Av. Cabildo 1975, CABA', pantalla: 'LED Performace', res: '1024x192', orientacion: 'Horizontal', camp: 'Performance-Basket', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0004', sucursal: 'Cero26', direccion: 'Av Velez Sarfield 361, Cordoba', pantalla: 'Columna Vertical', res: '1080x1920', orientacion: 'Vertical', camp: 'SPEZIAL & THRASHER', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0005', sucursal: 'Dexter - Abasto', direccion: 'Av Corrientes 3247, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'HYPERBOOST_3D_CGI', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0006', sucursal: 'Dexter - Abasto', direccion: 'Av Corrientes 3247, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'HYPERBOOST_3D_CGI', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0007', sucursal: 'Dexter - Abasto', direccion: 'Av Corrientes 3247, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'ADIZERO', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0008', sucursal: 'Dexter - Abasto', direccion: 'Av Corrientes 3247, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'ADIZERO', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0009', sucursal: 'Dexter - Abasto', direccion: 'Av Corrientes 3247, CABA', pantalla: 'Led FTW', res: '1408x64', orientacion: 'Horizontal', camp: 'F50-PREDATOR-COPA', estado: 'Publicado', aprov: 'Aprobado', status: 'Advertencia', ticket: '#TK-9012 - Temp Alta', drive: 'https://drive.google.com' },
+            { id: 'ADI-0010', sucursal: 'Dexter - Cabildo y Juramento', direccion: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'COPA Argentina Macallister', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0011', sucursal: 'Dexter - Cabildo y Juramento', direccion: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'F50 Argentina Alvarez', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0012', sucursal: 'Dexter - Cabildo y Juramento', direccion: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'Predator Argentina Palacios', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0013', sucursal: 'Dexter - Cabildo y Juramento', direccion: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'RUN-ADISTAR-SUPERNOVA-ULTRABOOST', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0014', sucursal: 'Dexter - Cabildo y Juramento', direccion: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'RUN-ADISTAR-SUPERNOVA-ULTRABOOST', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0015', sucursal: 'Dexter - Cabildo y Juramento', direccion: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'ADIZERO', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0016', sucursal: 'Dexter - Cabildo y Juramento', direccion: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'ADIZERO', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0017', sucursal: 'Dexter - Floyco', direccion: 'Florida 395, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'HYPERBOOST_3D_CGI', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0018', sucursal: 'Dexter - Floyco', direccion: 'Florida 395, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'HYPERBOOST_3D_CGI', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0019', sucursal: 'Dexter - Floyco', direccion: 'Florida 395, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'ADIZERO', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0020', sucursal: 'Dexter - Floyco', direccion: 'Florida 395, CABA', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'ADIZERO', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0021', sucursal: 'Dexter - Floyco', direccion: 'Florida 395, CABA', pantalla: 'Led FTW', res: '1408x64', orientacion: 'Horizontal', camp: 'F50-PREDATOR-COPA', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0022', sucursal: 'Dexter - Unicenter', direccion: 'Paraná 3745, Martinez', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'ADIZERO', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0023', sucursal: 'Dexter - Unicenter', direccion: 'Paraná 3745, Martinez', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'ADIZERO', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0024', sucursal: 'Dexter - Unicenter', direccion: 'Paraná 3745, Martinez', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'HYPERBOOST_3D_CGI', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0025', sucursal: 'Dexter - Unicenter', direccion: 'Paraná 3745, Martinez', pantalla: 'Pantalla 13"', res: '1080x1920', orientacion: 'Vertical', camp: 'HYPERBOOST_3D_CGI', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0026', sucursal: 'Dexter - Unicenter', direccion: 'Paraná 3745, Martinez', pantalla: 'Led FTW', res: '1408x64', orientacion: 'Horizontal', camp: 'F50-PREDATOR-COPA', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0027', sucursal: 'Grid - Abasto', direccion: 'Av Corrientes 3247, CABA', pantalla: 'Stretch 37"', res: '1920x540', orientacion: 'Horizontal', camp: 'MEGARIDE', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0028', sucursal: 'Grid - Abasto', direccion: 'Av Corrientes 3247, CABA', pantalla: 'Videowall 2x2', res: '1080x1920', orientacion: 'Vertical', camp: 'SPEZIAL & THRASHER', estado: 'Publicado', aprov: 'Aprobado', status: 'Mantenimiento', ticket: '#TK-9040 - Cambio LED', drive: 'https://drive.google.com' },
+            { id: 'ADI-0029', sucursal: 'Grid - Unicenter', direccion: 'Paraná 3745, Martinez', pantalla: 'Calzado mujer', res: '3840x600', orientacion: 'Horizontal', camp: 'The Original', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0030', sucursal: 'Grid - Unicenter', direccion: 'Paraná 3745, Martinez', pantalla: 'Calzado hombre', res: '3840x600', orientacion: 'Horizontal', camp: 'MEGARIDE', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0031', sucursal: 'New Sport - Cordoba', direccion: 'Cordoba', pantalla: 'Led ingreso', res: '1280x960', orientacion: 'Horizontal', camp: 'TRIONDA', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0032', sucursal: 'Solo Deportes - Cabildo', direccion: 'Buenos Aires', pantalla: 'Vidriera', res: '1080x1920', orientacion: 'Vertical', camp: 'AFA_HOME_MAIN', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0033', sucursal: 'Sport 78 - Palace Garden', direccion: 'Rosario', pantalla: 'Led Vidriera', res: '624x1040', orientacion: 'Vertical', camp: 'AFA_HOME_MAIN', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0034', sucursal: 'Sport 78 - Tia', direccion: 'Rosario', pantalla: 'Videowall 2x2 FTW', res: '1080x1920', orientacion: 'Vertical', camp: 'BOCA RIVER', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0037', sucursal: 'Templo del futbol - Abasto', direccion: 'Av Corrientes 3247, CABA', pantalla: 'LED Arco & Columnas', res: '3328x320', orientacion: 'Horizontal', camp: 'Ultimo Tango', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0038', sucursal: 'Templo del futbol - Abasto', direccion: 'Av Corrientes 3247, CABA', pantalla: 'LED Print Shop', res: '2560x64', orientacion: 'Horizontal', camp: 'Ticker Print Shop', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0039', sucursal: 'Templo del futbol - Abasto', direccion: 'Av Corrientes 3247, CABA', pantalla: 'Led FTW', res: '1408x64', orientacion: 'Horizontal', camp: 'F50-PREDATOR-COPA', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0040', sucursal: 'Templo del futbol - Abasto', direccion: 'Av Corrientes 3247, CABA', pantalla: 'Led Vidriera', res: '1408x768', orientacion: 'Horizontal', camp: 'AFA_HOME_MAIN', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' },
+            { id: 'ADI-0041', sucursal: 'Templo del futbol - Unicenter', direccion: 'Paraná 3745, Martinez', pantalla: 'Led Vidriera', res: '768x1088', orientacion: 'Vertical', camp: 'AFA_HOME_MAIN', estado: 'Publicado', aprov: 'Aprobado', status: 'Online', ticket: null, drive: 'https://drive.google.com' }
+        ];
+
+        let myChart = null;
+
+        function groupDataByCampaign(data) {
+            return data.reduce((acc, curr) => {
+                const key = curr.camp.trim();
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(curr);
+                return acc;
+            }, {});
+        }
+
+        function renderCampaigns(filterText = '') {
+            const container = document.getElementById('campaignsContainer');
+            container.innerHTML = '';
+
+            const filtered = screensData.filter(item => {
+                const search = filterText.toLowerCase();
+                return item.camp.toLowerCase().includes(search) ||
+                       item.sucursal.toLowerCase().includes(search) ||
+                       item.id.toLowerCase().includes(search) ||
+                       item.pantalla.toLowerCase().includes(search);
+            });
+
+            const grouped = groupDataByCampaign(filtered);
+
+            if (Object.keys(grouped).length === 0) {
+                container.innerHTML = `<div class="p-8 text-center bg-white rounded-xl text-gray-500">No se encontraron posiciones que coincidan con la búsqueda.</div>`;
+                return;
+            }
+
+            Object.entries(grouped).forEach(([campName, items], index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden";
+                
+                const getStatusBadge = (st) => {
+                    if (st === 'Online') return `<span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-semibold"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Online</span>`;
+                    if (st === 'Advertencia') return `<span class="bg-amber-100 text-amber-700 text-xs px-2.5 py-1 rounded-full font-semibold"><i class="fa-solid fa-triangle-exclamation text-[8px] mr-1"></i> Temp Alta</span>`;
+                    if (st === 'Mantenimiento') return `<span class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-semibold"><i class="fa-solid fa-wrench text-[8px] mr-1"></i> Mantenimiento</span>`;
+                    return `<span class="bg-red-100 text-red-700 text-xs px-2.5 py-1 rounded-full font-semibold"><i class="fa-solid fa-power-off text-[8px] mr-1"></i> Offline</span>`;
+                };
+
+                let rowsHtml = items.map(screen => `
+                    <tr class="border-t border-gray-100 hover:bg-gray-50/80 transition text-xs">
+                        <td class="p-3 font-bold text-gray-900">${screen.id}</td>
+                        <td class="p-3">
+                            <div class="font-semibold text-gray-800">${screen.sucursal}</div>
+                            <div class="text-[11px] text-gray-400">${screen.direccion}</div>
+                        </td>
+                        <td class="p-3">
+                            <div class="text-gray-700 font-medium">${screen.pantalla}</div>
+                            <div class="text-[10px] text-gray-400">${screen.res} | ${screen.orientacion}</div>
+                        </td>
+                        <td class="p-3">
+                            <span class="${screen.estado === 'Publicado' ? 'text-green-600 font-semibold' : 'text-amber-600 font-semibold'}">${screen.estado}</span>
+                            <div class="text-[10px] text-green-700"><i class="fa-solid fa-check"></i> ${screen.aprov}</div>
+                        </td>
+                        <td class="p-3">
+                            <button onclick="openStatusModal('${screen.id}')" class="hover:opacity-80 transition">
+                                ${getStatusBadge(screen.status)}
+                            </button>
+                        </td>
+                        <td class="p-3">
+                            ${screen.ticket ? 
+                                `<button onclick="openTicketModal('${screen.id}')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2.5 py-1 rounded-lg text-[11px] font-semibold hover:bg-amber-100 transition"><i class="fa-solid fa-ticket mr-1"></i> ${screen.ticket}</button>` :
+                                `<button onclick="openTicketModal('${screen.id}')" class="text-gray-400 hover:text-gray-700 text-[11px] font-medium"><i class="fa-solid fa-plus mr-1"></i> Crear Ticket</button>`
+                            }
+                        </td>
+                        <td class="p-3 text-right">
+                            <a href="${screen.drive}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-semibold bg-blue-50 px-2.5 py-1.5 rounded-lg"><i class="fa-brands fa-google-drive"></i> Drive</a>
+                        </td>
+                    </tr>
+                `).join('');
+
+                card.innerHTML = `
+                    <div class="p-4 bg-gray-900 text-white flex flex-wrap justify-between items-center gap-3 cursor-pointer select-none" onclick="toggleAccordion('camp-${index}')">
+                        <div class="flex items-center space-x-3">
+                            <i class="fa-solid fa-chevron-down text-xs text-gray-400 transform transition-transform" id="icon-camp-${index}"></i>
+                            <h2 class="font-bold text-base tracking-wide">${campName}</h2>
+                            <span class="bg-white/10 text-white text-xs px-2.5 py-0.5 rounded-full font-medium">${items.length} ${items.length === 1 ? 'pantalla' : 'pantallas'}</span>
+                        </div>
+                        <div class="flex items-center space-x-2" onclick="event.stopPropagation()">
+                            <button onclick="openStatsModal('${campName}')" class="bg-accent-yellow text-black hover:bg-yellow-300 text-xs px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-chart-simple"></i> Estadísticas de Campaña
+                            </button>
+                        </div>
+                    </div>
+                    <div id="camp-${index}" class="accordion-content overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-[11px] uppercase tracking-wider font-semibold border-b border-gray-100">
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Sucursal / Dirección</th>
+                                    <th class="p-3">Pantalla / Formato</th>
+                                    <th class="p-3">Estado</th>
+                                    <th class="p-3">Telemetría</th>
+                                    <th class="p-3">Ticket Soporte</th>
+                                    <th class="p-3 text-right">Materiales</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(`icon-${id}`);
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+
+        function toggleAll(expand) {
+            const contents = document.querySelectorAll('.accordion-content');
+            const icons = document.querySelectorAll('[id^="icon-camp-"]');
+            contents.forEach(c => expand ? c.classList.remove('hidden') : c.classList.add('hidden'));
+            icons.forEach(i => expand ? i.classList.add('rotate-180') : i.classList.remove('rotate-180'));
+        }
+
+        function openStatsModal(campName) {
+            document.getElementById('modalCampaignTitle').innerHTML = `<i class="fa-solid fa-chart-line text-blue-600"></i> Estadísticas: ${campName}`;
+            document.getElementById('statsModal').classList.remove('hidden');
+
+            const ctx = document.getElementById('campaignChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'],
+                    datasets: [{
+                        label: 'Reproducciones / Hora',
+                        data: [120, 240, 380, 310, 420, 510, 390],
+                        borderColor: '#000000',
+                        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function openStatusModal(id) {
+            const screen = screensData.find(s => s.id === id);
+            const content = document.getElementById('ticketContent');
+            document.getElementById('statusContent').innerHTML = `
+                <div class="p-3 bg-gray-50 rounded-xl space-y-2">
+                    <div class="flex justify-between"><span class="text-gray-500">Posición ID:</span> <strong>${screen.id}</strong></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Sucursal:</span> <strong>${screen.sucursal}</strong></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Resolución:</span> <strong>${screen.res}</strong></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Latencia Red:</span> <strong class="text-green-600">18 ms</strong></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Temperatura Player:</span> <strong>${screen.status === 'Advertencia' ? '68°C (Alta)' : '42°C (Normal)'}</strong></div>
+                </div>
+            `;
+            document.getElementById('statusModal').classList.remove('hidden');
+        }
+
+        function openTicketModal(id) {
+            const screen = screensData.find(s => s.id === id);
+            const content = document.getElementById('ticketContent');
+            if (screen.ticket) {
+                content.innerHTML = `
+                    <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-2">
+                        <div class="font-bold text-amber-900">${screen.ticket}</div>
+                        <p class="text-xs text-amber-800">Iniciado para la posición ${screen.id} en ${screen.sucursal}. Un técnico especialista fue asignado.</p>
+                        <div class="text-xs text-amber-700 pt-2 border-t border-amber-200/60">SLA estimado de resolución: &lt; 4 horas</div>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="space-y-3">
+                        <p class="text-xs text-gray-600">Crear una nueva incidencia técnica para la pantalla <strong>${screen.id}</strong> (${screen.sucursal}).</p>
+                        <textarea class="w-full border border-gray-300 rounded-lg p-2 text-xs" rows="3" placeholder="Describe la falla observada..."></textarea>
+                        <button onclick="alert('Ticket creado exitosamente'); closeModal('ticketModal');" class="w-full bg-black text-white py-2 rounded-lg text-xs font-bold hover:bg-gray-800">Registrar Incidencia</button>
+                    </div>
+                `;
+            }
+            document.getElementById('ticketModal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            renderCampaigns(e.target.value);
+        });
+
+        // Inicializar renderizado
+        renderCampaigns();
+    </script>
+</body>
+</html>
