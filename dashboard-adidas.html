@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adidas 2026 - Planificador & Dashboard de Pantallas</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        adidas: {
+                            black: '#000000',
+                            dark: '#121212',
+                            card: '#1e1e1e',
+                            border: '#2e2e2e',
+                            accent: '#22c55e', // Adidas active neon green tone
+                            yellow: '#eab308',
+                            red: '#ef4444',
+                            blue: '#3b82f6',
+                            text: '#f3f4f6'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .adidas-stripe {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.05) 75%, transparent 75%, transparent);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="bg-adidas-dark text-adidas-text font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-black border-b border-adidas-border sticky top-0 z-30">
+        <div class="max-w-[1800px] mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <svg class="h-8 w-12 fill-current text-white" viewBox="0 0 24 24">
+                    <path d="M21.41 19.5H16.6L12 12.87L7.4 19.5H2.59L10 8.87L12 6L14 8.87L21.41 19.5ZM12 2.5L9.5 6H14.5L12 2.5Z"/>
+                </svg>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-wider text-white uppercase flex items-center gap-2">
+                        PLANIFICADOR <span class="bg-white text-black text-xs px-2 py-0.5 rounded font-black tracking-widest">2026</span>
+                    </h1>
+                    <p class="text-xs text-gray-400">Control Global de Pantallas Digitales en Tiendas</p>
+                </div>
+            </div>
+
+            <!-- Quick Global Controls & Status -->
+            <div class="flex items-center gap-4 text-xs">
+                <div class="hidden sm:flex items-center gap-2 bg-adidas-card px-3 py-1.5 rounded-lg border border-adidas-border">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-gray-300">Sistema DOOH Activo</span>
+                </div>
+                <div class="text-right">
+                    <div class="text-gray-400">Última Sync</div>
+                    <div class="font-mono text-white" id="lastSyncTime">Hoy, 15:04 HS</div>
+                </div>
+                <button onclick="refreshData()" title="Refrescar datos" class="p-2 bg-adidas-card hover:bg-gray-800 rounded-lg border border-adidas-border transition">
+                    <i class="fa-solid fa-rotate text-sm text-gray-300"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1800px] mx-auto px-4 py-6 flex-1 w-full flex flex-col gap-6">
+
+        <!-- KPI Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- Total Pantallas -->
+            <div class="bg-adidas-card border border-adidas-border p-4 rounded-xl shadow-lg relative overflow-hidden group">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Posiciones</p>
+                        <p class="text-3xl font-black text-white mt-1" id="kpiTotal">39</p>
+                    </div>
+                    <div class="p-2.5 bg-blue-500/10 text-blue-400 rounded-lg">
+                        <i class="fa-solid fa-desktop text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-gray-400 flex justify-between">
+                    <span>Verticales: <strong class="text-white">25</strong></span>
+                    <span>Horizontales: <strong class="text-white">14</strong></span>
+                </div>
+            </div>
+
+            <!-- Sucursales Cobertura -->
+            <div class="bg-adidas-card border border-adidas-border p-4 rounded-xl shadow-lg relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Sucursales / Tiendas</p>
+                        <p class="text-3xl font-black text-white mt-1">15</p>
+                    </div>
+                    <div class="p-2.5 bg-purple-500/10 text-purple-400 rounded-lg">
+                        <i class="fa-solid fa-store text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-gray-400">
+                    CABA, GBA, Córdoba, Rosario
+                </div>
+            </div>
+
+            <!-- Estatus Red (Online/Offline) -->
+            <div class="bg-adidas-card border border-adidas-border p-4 rounded-xl shadow-lg relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Red de Players</p>
+                        <p class="text-2xl font-black text-emerald-400 mt-1" id="kpiOnlineStatus">36 <span class="text-xs text-gray-400 font-normal">Online</span></p>
+                    </div>
+                    <div class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                        <i class="fa-solid fa-wifi text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs flex items-center justify-between gap-1">
+                    <span class="text-amber-400"><i class="fa-solid fa-triangle-exclamation"></i> 2 Adv.</span>
+                    <span class="text-rose-500"><i class="fa-solid fa-circle-xmark"></i> 1 Off.</span>
+                    <span class="text-blue-400"><i class="fa-solid fa-wrench"></i> 1 Mant.</span>
+                </div>
+            </div>
+
+            <!-- Estado de Contenido -->
+            <div class="bg-adidas-card border border-adidas-border p-4 rounded-xl shadow-lg relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Publicación Contenido</p>
+                        <p class="text-3xl font-black text-white mt-1">97.4%</p>
+                    </div>
+                    <div class="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-lg">
+                        <i class="fa-solid fa-photo-film text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-gray-400 flex justify-between">
+                    <span class="text-emerald-400">38 Publicados</span>
+                    <span class="text-rose-400">1 Sin Solicitud</span>
+                </div>
+            </div>
+
+            <!-- Incidentes & Tickets -->
+            <div class="bg-adidas-card border border-adidas-border p-4 rounded-xl shadow-lg relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Tickets Soporte</p>
+                        <p class="text-3xl font-black text-amber-400 mt-1" id="kpiTickets">3</p>
+                    </div>
+                    <div class="p-2.5 bg-amber-500/10 text-amber-400 rounded-lg">
+                        <i class="fa-solid fa-ticket text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-gray-400 flex justify-between">
+                    <span>Abiertos: <strong class="text-amber-400">3</strong></span>
+                    <span>Resueltos hoy: <strong class="text-emerald-400">5</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Interactive Filters Toolbar -->
+        <div class="bg-adidas-card border border-adidas-border p-4 rounded-xl shadow-md flex flex-col md:flex-row gap-4 justify-between items-center">
+            <!-- Search Bar -->
+            <div class="relative w-full md:w-96">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Buscar por ID, Sucursal, Campaña o Pantalla..."
+                    class="w-full bg-adidas-dark border border-adidas-border rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-white transition">
+            </div>
+
+            <!-- Filter Dropdowns -->
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <!-- Sucursal Filter -->
+                <select id="filterSucursal" onchange="applyFilters()" class="bg-adidas-dark border border-adidas-border rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-white">
+                    <option value="">Todas las Sucursales</option>
+                    <option value="Dexter - Abasto">Dexter - Abasto</option>
+                    <option value="Dexter - Cabildo y Juramento">Dexter - Cabildo y Juramento</option>
+                    <option value="Dexter - Floyco">Dexter - Floyco</option>
+                    <option value="Dexter - Unicenter">Dexter - Unicenter</option>
+                    <option value="Grid - Abasto">Grid - Abasto</option>
+                    <option value="Grid - Unicenter">Grid - Unicenter</option>
+                    <option value="Templo del futbol">Templo del Fútbol (Todas)</option>
+                    <option value="Fuencarral">Fuencarral - Nuevo Centro</option>
+                    <option value="Basket Capital">Basket Capital</option>
+                    <option value="Otros">Otras Sucursales</option>
+                </select>
+
+                <!-- Estado Operativo Filter -->
+                <select id="filterStatus" onchange="applyFilters()" class="bg-adidas-dark border border-adidas-border rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-white">
+                    <option value="">Todos los Estatus</option>
+                    <option value="Online">🟢 Online</option>
+                    <option value="Advertencia">🟡 Advertencia</option>
+                    <option value="Mantenimiento">🛠️ Mantenimiento</option>
+                    <option value="Offline">🔴 Offline</option>
+                </select>
+
+                <!-- Orientacion Filter -->
+                <select id="filterOrientacion" onchange="applyFilters()" class="bg-adidas-dark border border-adidas-border rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-white">
+                    <option value="">Todas las Orientaciones</option>
+                    <option value="Vertical">Vertical</option>
+                    <option value="Horizontal">Horizontal</option>
+                </select>
+
+                <!-- Ticket Filter -->
+                <select id="filterTickets" onchange="applyFilters()" class="bg-adidas-dark border border-adidas-border rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-white">
+                    <option value="">Con/Sin Ticket</option>
+                    <option value="con_ticket">🎫 Con Ticket Activo</option>
+                    <option value="sin_ticket">Sin Incidencias</option>
+                </select>
+
+                <button onclick="resetFilters()" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded-lg transition border border-adidas-border" title="Resetear Filtros">
+                    <i class="fa-solid fa-filter-circle-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Data Table Container -->
+        <div class="bg-adidas-card border border-adidas-border rounded-xl shadow-xl overflow-hidden flex-1 flex flex-col">
+            <div class="overflow-x-auto flex-1">
+                <table class="w-full text-left text-xs text-gray-300 border-collapse">
+                    <thead class="bg-black/80 uppercase text-[11px] font-bold text-gray-400 tracking-wider sticky top-0 z-10 border-b border-adidas-border backdrop-blur">
+                        <tr>
+                            <th class="p-3 w-24">ID</th>
+                            <th class="p-3 min-w-[180px]">Sucursal & Dirección</th>
+                            <th class="p-3 min-w-[150px]">Pantalla & Res.</th>
+                            <th class="p-3 min-w-[220px]">Campaña Activa & Métricas</th>
+                            <th class="p-3 min-w-[140px]">Estado / Aprobación</th>
+                            <th class="p-3 min-w-[150px]">Estatus Player</th>
+                            <th class="p-3 min-w-[180px]">Ticket Soporte</th>
+                            <th class="p-3 text-center w-28">Materiales</th>
+                        </tr>
+                    </thead>
+                    <tbody id="plannerTableBody" class="divide-y divide-adidas-border/50">
+                        <!-- Dynamic Rows Inject Here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Footer Stats -->
+            <div class="bg-black/50 border-t border-adidas-border p-3 text-xs text-gray-400 flex flex-wrap justify-between items-center gap-2">
+                <div>Mostrando <span id="visibleCount" class="font-bold text-white">0</span> de <span class="font-bold text-white">39</span> posiciones</div>
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Online</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Advertencia</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Mantenimiento</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Offline</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL 1: STATS DE CAMPAÑA -->
+    <div id="statsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-adidas-card border border-adidas-border w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
+            <!-- Modal Header -->
+            <div class="p-5 bg-black border-b border-adidas-border flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                        <i class="fa-solid fa-chart-line text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white flex items-center gap-2" id="modalCampaignTitle">Campaña: Hyperboost 3D</h3>
+                        <p class="text-xs text-gray-400">Métricas analíticas de emisión y Share of Voice (SoV)</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('statsModal')" class="text-gray-400 hover:text-white p-2 text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 overflow-y-auto space-y-6">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="bg-adidas-dark p-3 rounded-xl border border-adidas-border">
+                        <p class="text-[10px] uppercase text-gray-400 font-semibold">Total Plays Hoy</p>
+                        <p class="text-xl font-bold text-white mt-1" id="statPlays">1,420</p>
+                        <span class="text-[10px] text-emerald-400">↑ 12% vs ayer</span>
+                    </div>
+                    <div class="bg-adidas-dark p-3 rounded-xl border border-adidas-border">
+                        <p class="text-[10px] uppercase text-gray-400 font-semibold">Share of Voice (SoV)</p>
+                        <p class="text-xl font-bold text-emerald-400 mt-1" id="statSov">25%</p>
+                        <span class="text-[10px] text-gray-400">1 de cada 4 loops</span>
+                    </div>
+                    <div class="bg-adidas-dark p-3 rounded-xl border border-adidas-border">
+                        <p class="text-[10px] uppercase text-gray-400 font-semibold">Duración de Loop</p>
+                        <p class="text-xl font-bold text-white mt-1" id="statLoop">15 Seg</p>
+                        <span class="text-[10px] text-gray-400">Formato HD / CGI</span>
+                    </div>
+                    <div class="bg-adidas-dark p-3 rounded-xl border border-adidas-border">
+                        <p class="text-[10px] uppercase text-gray-400 font-semibold">Horas en Emisión</p>
+                        <p class="text-xl font-bold text-white mt-1" id="statHours">11.5 h</p>
+                        <span class="text-[10px] text-emerald-400">Sin interrupciones</span>
+                    </div>
+                </div>
+
+                <!-- Chart Container -->
+                <div class="bg-adidas-dark p-4 rounded-xl border border-adidas-border">
+                    <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3">Reproducciones por hora (Horario comercial)</h4>
+                    <div class="h-56 relative">
+                        <canvas id="campaignChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Detalles Adicionales -->
+                <div class="bg-adidas-dark/50 p-4 rounded-xl border border-adidas-border/50 text-xs space-y-2">
+                    <div class="flex justify-between border-b border-adidas-border/40 pb-2">
+                        <span class="text-gray-400">Fecha objetivo de inicio:</span>
+                        <span class="text-white font-medium" id="statTargetDate">01/03/2026</span>
+                    </div>
+                    <div class="flex justify-between border-b border-adidas-border/40 pb-2">
+                        <span class="text-gray-400">Fecha efectiva de publicación:</span>
+                        <span class="text-emerald-400 font-medium" id="statPubDate">01/03/2026</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Estado de Aprobación del Cliente:</span>
+                        <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check"></i> Aprobado 100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-black border-t border-adidas-border text-right">
+                <button onclick="closeModal('statsModal')" class="px-5 py-2 bg-white text-black font-bold text-xs rounded-lg hover:bg-gray-200 transition">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: ESTATUS DE FUNCIONAMIENTO Y TELEMETRÍA -->
+    <div id="telemetryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-adidas-card border border-adidas-border w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+            <div class="p-5 bg-black border-b border-adidas-border flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div id="telemetryBadgeIcon" class="p-2.5 rounded-lg text-lg">
+                        <i class="fa-solid fa-server"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white" id="telemetryTitle">Telemetría de Player - ADI-0001</h3>
+                        <p class="text-xs text-gray-400" id="telemetrySubtitle">Sucursal Fuencarral - Led Ingreso</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('telemetryModal')" class="text-gray-400 hover:text-white p-2 text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div class="p-4 rounded-xl border flex items-center justify-between" id="telemetryStatusBanner">
+                    <!-- Status text injected via JS -->
+                </div>
+
+                <!-- Technical Specs Grid -->
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="bg-adidas-dark p-3 rounded-lg border border-adidas-border">
+                        <span class="text-gray-400 block mb-1">Temperatura CPU/GPU:</span>
+                        <span class="font-mono text-base font-bold text-white" id="telemetryTemp">42 °C</span>
+                    </div>
+                    <div class="bg-adidas-dark p-3 rounded-lg border border-adidas-border">
+                        <span class="text-gray-400 block mb-1">FPS Renderizado:</span>
+                        <span class="font-mono text-base font-bold text-white" id="telemetryFps">60 FPS</span>
+                    </div>
+                    <div class="bg-adidas-dark p-3 rounded-lg border border-adidas-border">
+                        <span class="text-gray-400 block mb-1">Red / Ping Latencia:</span>
+                        <span class="font-mono text-base font-bold text-white" id="telemetryPing">18 ms</span>
+                    </div>
+                    <div class="bg-adidas-dark p-3 rounded-lg border border-adidas-border">
+                        <span class="text-gray-400 block mb-1">Último Heartbeat:</span>
+                        <span class="font-mono text-base font-bold text-white" id="telemetrySync">Hace 2 min</span>
+                    </div>
+                </div>
+
+                <!-- Hardware info -->
+                <div class="bg-adidas-dark p-3 rounded-lg border border-adidas-border text-xs space-y-1">
+                    <div class="flex justify-between"><span class="text-gray-400">Player OS:</span><span class="text-white font-mono">Ubuntu DOOH Kiosk 22.04</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Resolución Nativa:</span><span class="text-white font-mono" id="telemetryRes">1080x1920</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Ubicación física:</span><span class="text-white" id="telemetryLoc">Vidriera Entrada</span></div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-black border-t border-adidas-border flex justify-between items-center">
+                <button onclick="rebootPlayer()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-rose-400 text-xs font-semibold rounded-lg border border-adidas-border transition">
+                    <i class="fa-solid fa-power-off mr-1"></i> Reiniciar Player
+                </button>
+                <button onclick="closeModal('telemetryModal')" class="px-5 py-2 bg-white text-black font-bold text-xs rounded-lg hover:bg-gray-200 transition">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: GESTIÓN DE TICKET DE SOPORTE -->
+    <div id="ticketModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-adidas-card border border-adidas-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+            <div class="p-5 bg-black border-b border-adidas-border flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-amber-500/20 text-amber-400 rounded-lg">
+                        <i class="fa-solid fa-ticket text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white" id="ticketModalTitle">Gestión de Ticket de Soporte</h3>
+                        <p class="text-xs text-gray-400" id="ticketModalSubtitle">Posición ADI-0001</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('ticketModal')" class="text-gray-400 hover:text-white p-2 text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="ticketForm" onsubmit="saveTicket(event)" class="p-6 space-y-4">
+                <input type="hidden" id="ticketPosId">
+
+                <!-- Details when existing ticket -->
+                <div id="existingTicketBox" class="hidden p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-amber-400 text-sm" id="existingTicketCode">#TK-8801</span>
+                        <span class="px-2 py-0.5 bg-amber-500 text-black font-black rounded text-[10px]" id="existingTicketStatus">EN REVISIÓN</span>
+                    </div>
+                    <p class="text-gray-300" id="existingTicketDesc">El equipo no responde a los comandos remotos desde la última actualización.</p>
+                    <div class="text-gray-400 pt-1 flex justify-between border-t border-amber-500/20 text-[10px]">
+                        <span>Técnico asignado: <strong>Carlos M. (Soporte N2)</strong></span>
+                        <span>SLA: <strong>4 hrs max</strong></span>
+                    </div>
+                </div>
+
+                <!-- Form Fields -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Tipo de Incidencia / Falla</label>
+                    <select id="ticketIssueType" class="w-full bg-adidas-dark border border-adidas-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-white">
+                        <option value="Sin señal / Pantalla Negra">Sin señal / Pantalla Negra</option>
+                        <option value="Temperatura Elevada">Alerta de Temperatura Elevada</option>
+                        <option value="Falla Módulo LED">Módulo LED Dañado / Parpadeo</option>
+                        <option value="Desconexión de Red">Desconexión Frecuente de Red</option>
+                        <option value="Desfasaje de Contenido">Desfasaje o Falla de Reproducción</option>
+                        <option value="Otro">Otro Problema Técnico</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Prioridad de Atención</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="border border-adidas-border bg-adidas-dark p-2 rounded-lg flex items-center gap-2 cursor-pointer text-xs hover:border-gray-500">
+                            <input type="radio" name="priority" value="Baja" class="accent-emerald-500">
+                            <span>Baja</span>
+                        </label>
+                        <label class="border border-adidas-border bg-adidas-dark p-2 rounded-lg flex items-center gap-2 cursor-pointer text-xs hover:border-gray-500">
+                            <input type="radio" name="priority" value="Media" checked class="accent-amber-500">
+                            <span>Media</span>
+                        </label>
+                        <label class="border border-adidas-border bg-adidas-dark p-2 rounded-lg flex items-center gap-2 cursor-pointer text-xs hover:border-gray-500">
+                            <input type="radio" name="priority" value="Alta" class="accent-rose-500">
+                            <span class="text-rose-400 font-bold">Alta</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Observaciones / Descripción del Reporte</label>
+                    <textarea id="ticketNotes" rows="3" placeholder="Escriba detalles del comportamiento o contexto en tienda..."
+                        class="w-full bg-adidas-dark border border-adidas-border rounded-lg p-3 text-xs text-white focus:outline-none focus:border-white"></textarea>
+                </div>
+
+                <div class="p-4 bg-black border-t border-adidas-border flex justify-between items-center -mx-6 -mb-6 mt-4">
+                    <button type="button" id="btnDeleteTicket" onclick="closeTicket()" class="hidden px-3 py-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 text-xs font-bold rounded-lg transition border border-emerald-500/30">
+                        <i class="fa-solid fa-check mr-1"></i> Resolver / Cerrar Ticket
+                    </button>
+                    <div class="ml-auto flex gap-2">
+                        <button type="button" onclick="closeModal('ticketModal')" class="px-4 py-2 bg-gray-800 text-gray-300 font-bold text-xs rounded-lg hover:bg-gray-700 transition">Cancelar</button>
+                        <button type="submit" class="px-5 py-2 bg-white text-black font-bold text-xs rounded-lg hover:bg-gray-200 transition">Guardar Reporte</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-white text-black px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+        <span id="toastMsg" class="text-xs font-bold">Acción realizada con éxito</span>
+    </div>
+
+    <script>
+        // Data derived directly from Planificador Adidas 2026 Excel tab
+        const plannerData = [
+            { id: 'ADI-0001', sucursal: 'Fuencarral - Nuevo Centro', dir: 'Duarte Quiros 1400, Cordoba', pantalla: 'Led Ingreso', orientacion: 'Horizontal', res: '540x540', ubicacion: 'Vidriera', campActiva: 'AdistarFamily', campSolicitada: 'AdistarFamily', fObjetivo: '15/02/2026', fPub: '15/02/2026', estado: 'Sin solicitud', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Offline', ticket: { code: '#TK-8801', desc: 'Falla de conectividad local y pantalla sin señal.', status: 'En Revisión' } },
+            { id: 'ADI-0002', sucursal: 'Basket Capital', dir: 'Av. Cabildo 1975, CABA', pantalla: 'Led Originals', orientacion: 'Horizontal', res: '1024x192', ubicacion: 'Originals', campActiva: 'Originals-Basket', campSolicitada: 'Originals-Basket', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0003', sucursal: 'Basket Capital', dir: 'Av. Cabildo 1975, CABA', pantalla: 'LED Performace', orientacion: 'Horizontal', res: '1024x192', ubicacion: 'Performance', campActiva: 'Performance-Basket', campSolicitada: 'Performance-Basket', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0004', sucursal: 'Cero26', dir: 'Av Velez Sarfield 361, Cordoba', pantalla: 'Columna Vertical', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Columna Central', campActiva: 'SPEZIAL & THRASHER', campSolicitada: 'SPEZIAL & THRASHER', fObjetivo: '10/02/2026', fPub: '10/02/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0005', sucursal: 'Dexter - Abasto', dir: 'Av Corrientes 3247, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble FTW 1', campActiva: 'HYPERBOOST_3D_CGI', campSolicitada: 'HYPERBOOST_3D_CGI', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0006', sucursal: 'Dexter - Abasto', dir: 'Av Corrientes 3247, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble FTW 2', campActiva: 'HYPERBOOST_3D_CGI', campSolicitada: 'HYPERBOOST_3D_CGI', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0007', sucursal: 'Dexter - Abasto', dir: 'Av Corrientes 3247, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Running 1', campActiva: 'ADIZERO', campSolicitada: 'ADIZERO', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0008', sucursal: 'Dexter - Abasto', dir: 'Av Corrientes 3247, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Running 2', campActiva: 'ADIZERO', campSolicitada: 'ADIZERO', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0009', sucursal: 'Dexter - Abasto', dir: 'Av Corrientes 3247, CABA', pantalla: 'Led FTW', orientacion: 'Horizontal', res: '1408x64', ubicacion: 'Caballete Principal', campActiva: 'F50-PREDATOR-COPA', campSolicitada: 'F50-PREDATOR-COPA', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Advertencia', ticket: { code: '#TK-9012', desc: 'Temperatura de gabinete por encima de 65°C.', status: 'En Monitoreo' } },
+            { id: 'ADI-0010', sucursal: 'Dexter - Cabildo y Juramento', dir: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Futbol 1', campActiva: 'COPA Argentina Macallister', campSolicitada: 'COPA Argentina Macallister', fObjetivo: '15/02/2026', fPub: '15/02/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0011', sucursal: 'Dexter - Cabildo y Juramento', dir: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Futbol 2', campActiva: 'F50 Argentina Alvarez', campSolicitada: 'F50 Argentina Alvarez', fObjetivo: '15/02/2026', fPub: '15/02/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0012', sucursal: 'Dexter - Cabildo y Juramento', dir: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Futbol 3', campActiva: 'Predator Argentina Palacios', campSolicitada: 'Predator Argentina Palacios', fObjetivo: '15/02/2026', fPub: '15/02/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0013', sucursal: 'Dexter - Cabildo y Juramento', dir: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Running 1', campActiva: 'RUN-ADISTAR-SUPERNOVA-ULTRABOOST', campSolicitada: 'RUN-ADISTAR-SUPERNOVA-ULTRABOOST', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0014', sucursal: 'Dexter - Cabildo y Juramento', dir: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Running 2', campActiva: 'RUN-ADISTAR-SUPERNOVA-ULTRABOOST', campSolicitada: 'RUN-ADISTAR-SUPERNOVA-ULTRABOOST', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0015', sucursal: 'Dexter - Cabildo y Juramento', dir: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Pro 1', campActiva: 'ADIZERO', campSolicitada: 'ADIZERO', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0016', sucursal: 'Dexter - Cabildo y Juramento', dir: 'Av Cabildo 2080, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Pro 2', campActiva: 'ADIZERO', campSolicitada: 'ADIZERO', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0017', sucursal: 'Dexter - Floyco', dir: 'Florida 395, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Entrada Peatonal 1', campActiva: 'HYPERBOOST_3D_CGI', campSolicitada: 'HYPERBOOST_3D_CGI', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0018', sucursal: 'Dexter - Floyco', dir: 'Florida 395, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Entrada Peatonal 2', campActiva: 'HYPERBOOST_3D_CGI', campSolicitada: 'HYPERBOOST_3D_CGI', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0019', sucursal: 'Dexter - Floyco', dir: 'Florida 395, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Isla Running 1', campActiva: 'ADIZERO', campSolicitada: 'ADIZERO', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0020', sucursal: 'Dexter - Floyco', dir: 'Florida 395, CABA', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Isla Running 2', campActiva: 'ADIZERO', campSolicitada: 'ADIZERO', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0021', sucursal: 'Dexter - Floyco', dir: 'Florida 395, CABA', pantalla: 'Led FTW', orientacion: 'Horizontal', res: '1408x64', ubicacion: 'Caja Principal', campActiva: 'F50-PREDATOR-COPA', campSolicitada: 'F50-PREDATOR-COPA', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0022', sucursal: 'Dexter - Unicenter', dir: 'Paraná 3745, Martinez', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Adizero A', campActiva: 'ADIZERO', campSolicitada: 'ADIZERO', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0023', sucursal: 'Dexter - Unicenter', dir: 'Paraná 3745, Martinez', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Adizero B', campActiva: 'ADIZERO', campSolicitada: 'ADIZERO', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0024', sucursal: 'Dexter - Unicenter', dir: 'Paraná 3745, Martinez', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Hyperboost A', campActiva: 'HYPERBOOST_3D_CGI', campSolicitada: 'HYPERBOOST_3D_CGI', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0025', sucursal: 'Dexter - Unicenter', dir: 'Paraná 3745, Martinez', pantalla: 'Pantalla 13"', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Mueble Hyperboost B', campActiva: 'HYPERBOOST_3D_CGI', campSolicitada: 'HYPERBOOST_3D_CGI', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0026', sucursal: 'Dexter - Unicenter', dir: 'Paraná 3745, Martinez', pantalla: 'Led FTW', orientacion: 'Horizontal', res: '1408x64', ubicacion: 'Cabecera FTW', campActiva: 'F50-PREDATOR-COPA', campSolicitada: 'F50-PREDATOR-COPA', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0027', sucursal: 'Grid - Abasto', dir: 'Av Corrientes 3247, CABA', pantalla: 'Stretch 37"', orientacion: 'Horizontal', res: '1920x540', ubicacion: 'Góndola Originals', campActiva: 'MEGARIDE', campSolicitada: 'MEGARIDE', fObjetivo: '20/02/2026', fPub: '20/02/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0028', sucursal: 'Grid - Abasto', dir: 'Av Corrientes 3247, CABA', pantalla: 'Videowall 2x2', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Central Grid', campActiva: 'SPEZIAL & THRASHER', campSolicitada: 'SPEZIAL & THRASHER', fObjetivo: '20/02/2026', fPub: '20/02/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Mantenimiento', ticket: { code: '#TK-9040', desc: 'Reemplazo programado de módulo LED inferior.', status: 'En Mantenimiento' } },
+            { id: 'ADI-0029', sucursal: 'Grid - Unicenter', dir: 'Paraná 3745, Martinez', pantalla: 'Calzado mujer', orientacion: 'Horizontal', res: '3840x600', ubicacion: 'Sector Mujer', campActiva: 'The Original', campSolicitada: 'The Original', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0030', sucursal: 'Grid - Unicenter', dir: 'Paraná 3745, Martinez', pantalla: 'Calzado hombre', orientacion: 'Horizontal', res: '3840x600', ubicacion: 'Sector Hombre', campActiva: 'MEGARIDE', campSolicitada: 'MEGARIDE', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0031', sucursal: 'New Sport - Cordoba', dir: 'Cordoba Centro', pantalla: 'Led ingreso', orientacion: 'Horizontal', res: '1280x960', ubicacion: 'Vidriera Frontal', campActiva: 'TRIONDA', campSolicitada: 'TRIONDA', fObjetivo: '10/02/2026', fPub: '10/02/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0032', sucursal: 'Solo Deportes - Cabildo', dir: 'Av Cabildo 2100, CABA', pantalla: 'Vidriera', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Vidriera Principal', campActiva: 'AFA_HOME_MAIN', campSolicitada: 'AFA_HOME_MAIN', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0033', sucursal: 'Sport 78 - Palace Garden', dir: 'Cordoba 1300, Rosario', pantalla: 'Led Vidriera', orientacion: 'Vertical', res: '624x1040', ubicacion: 'Ingreso Galeria', campActiva: 'AFA_HOME_MAIN', campSolicitada: 'AFA_HOME_MAIN', fObjetivo: '15/02/2026', fPub: '15/02/2026', estado: 'Publicado', prioridad: 'Media', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0034', sucursal: 'Sport 78 - Tia', dir: 'Peatonal San Martin, Rosario', pantalla: 'Videowall 2x2 FTW', orientacion: 'Vertical', res: '1080x1920', ubicacion: 'Pared FTW', campActiva: 'BOCA RIVER', campSolicitada: 'BOCA RIVER', fObjetivo: '15/02/2026', fPub: '15/02/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0037', sucursal: 'Templo del futbol - Abasto', dir: 'Av Corrientes 3247, CABA', pantalla: 'LED Arco & Columnas', orientacion: 'Horizontal', res: '3328x320', ubicacion: 'Arco de Entrada', campActiva: 'Ultimo Tango', campSolicitada: 'Ultimo Tango', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0038', sucursal: 'Templo del futbol - Abasto', dir: 'Av Corrientes 3247, CABA', pantalla: 'LED Print Shop', orientacion: 'Horizontal', res: '2560x64', ubicacion: 'Print Shop Estampados', campActiva: 'Ticker Print Shop', campSolicitada: 'Ticker Print Shop', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Baja', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0039', sucursal: 'Templo del futbol - Abasto', dir: 'Av Corrientes 3247, CABA', pantalla: 'Led FTW', orientacion: 'Horizontal', res: '1408x64', ubicacion: 'Mostrador Central', campActiva: 'F50-PREDATOR-COPA', campSolicitada: 'F50-PREDATOR-COPA', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0040', sucursal: 'Templo del futbol - Abasto', dir: 'Av Corrientes 3247, CABA', pantalla: 'Led Vidriera', orientacion: 'Horizontal', res: '1408x768', ubicacion: 'Vidriera Mall', campActiva: 'AFA_HOME_MAIN', campSolicitada: 'AFA_HOME_MAIN', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null },
+            { id: 'ADI-0041', sucursal: 'Templo del futbol - Unicenter', dir: 'Paraná 3745, Martinez', pantalla: 'Led Vidriera', orientacion: 'Vertical', res: '768x1088', ubicacion: 'Vidriera Acceso', campActiva: 'AFA_HOME_MAIN', campSolicitada: 'AFA_HOME_MAIN', fObjetivo: '01/03/2026', fPub: '01/03/2026', estado: 'Publicado', prioridad: 'Alta', aprobacion: '🟢 Aprobado', status: 'Online', ticket: null }
+        ];
+
+        let chartInstance = null;
+
+        // Render Table Rows
+        function renderTable(data) {
+            const tbody = document.getElementById('plannerTableBody');
+            tbody.innerHTML = '';
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/50 transition border-b border-adidas-border/30';
+
+                // Status Badge Helper
+                let statusBadge = '';
+                if (item.status === 'Online') statusBadge = `<button onclick="openTelemetryModal('${item.id}')" class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full font-semibold hover:bg-emerald-500/20 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 🟢 Online</button>`;
+                else if (item.status === 'Advertencia') statusBadge = `<button onclick="openTelemetryModal('${item.id}')" class="px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full font-semibold hover:bg-amber-500/20 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span> 🟡 Advertencia</button>`;
+                else if (item.status === 'Mantenimiento') statusBadge = `<button onclick="openTelemetryModal('${item.id}')" class="px-2.5 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 rounded-full font-semibold hover:bg-blue-500/20 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-400"></span> 🛠️ Mantenimiento</button>`;
+                else statusBadge = `<button onclick="openTelemetryModal('${item.id}')" class="px-2.5 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-full font-semibold hover:bg-rose-500/20 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span> 🔴 Offline</button>`;
+
+                // Ticket Button Helper
+                let ticketBtn = '';
+                if (item.ticket) {
+                    ticketBtn = `<button onclick="openTicketModal('${item.id}')" class="px-2 py-1 bg-amber-500/20 border border-amber-500/50 text-amber-300 rounded-lg hover:bg-amber-500/30 transition flex items-center gap-1 text-[11px] font-bold">
+                        <i class="fa-solid fa-ticket"></i> ${item.ticket.code}
+                    </button>`;
+                } else {
+                    ticketBtn = `<button onclick="openTicketModal('${item.id}')" class="px-2 py-1 bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 border border-adidas-border rounded-lg transition text-[11px] flex items-center gap-1">
+                        <i class="fa-solid fa-plus text-[10px]"></i> Crear Ticket
+                    </button>`;
+                }
+
+                // Orientacion Tag
+                const orientTag = item.orientacion === 'Vertical' 
+                    ? `<span class="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded">Vertical</span>` 
+                    : `<span class="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 rounded">Horizontal</span>`;
+
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-white">${item.id}</td>
+                    <td class="p-3">
+                        <div class="font-bold text-white">${item.sucursal}</div>
+                        <div class="text-[10px] text-gray-400 truncate max-w-[200px]" title="${item.dir}">${item.dir}</div>
+                    </td>
+                    <td class="p-3">
+                        <div class="text-gray-200 font-medium">${item.pantalla}</div>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            ${orientTag}
+                            <span class="font-mono text-[10px] text-gray-400">${item.res}</span>
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-emerald-400">${item.campActiva}</span>
+                            <button onclick="openStatsModal('${item.campActiva}', '${item.id}')" class="px-2 py-0.5 bg-white text-black font-extrabold rounded text-[10px] hover:bg-gray-200 transition shadow flex items-center gap-1" title="Ver Estadísticas de Campaña">
+                                <i class="fa-solid fa-chart-simple"></i> Stats
+                            </button>
+                        </div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">Ubicación: <span class="text-gray-300">${item.ubicacion}</span></div>
+                    </td>
+                    <td class="p-3">
+                        <div class="font-semibold text-white">${item.estado}</div>
+                        <div class="text-[10px] text-emerald-400">${item.aprobacion}</div>
+                    </td>
+                    <td class="p-3">${statusBadge}</td>
+                    <td class="p-3">${ticketBtn}</td>
+                    <td class="p-3 text-center">
+                        <a href="https://drive.google.com" target="_blank" rel="noopener" class="p-1.5 text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg inline-block border border-adidas-border transition" title="Abrir carpeta Google Drive">
+                            <i class="fa-solid fa-folder-open text-xs"></i> Drive
+                        </a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('visibleCount').innerText = data.length;
+        }
+
+        // Apply Filters
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const sucursal = document.getElementById('filterSucursal').value;
+            const status = document.getElementById('filterStatus').value;
+            const orientacion = document.getElementById('filterOrientacion').value;
+            const ticketFilter = document.getElementById('filterTickets').value;
+
+            const filtered = plannerData.filter(item => {
+                const matchSearch = item.id.toLowerCase().includes(search) || 
+                                    item.sucursal.toLowerCase().includes(search) || 
+                                    item.campActiva.toLowerCase().includes(search) ||
+                                    item.pantalla.toLowerCase().includes(search);
+
+                const matchSucursal = sucursal === '' || item.sucursal.includes(sucursal);
+                const matchStatus = status === '' || item.status === status;
+                const matchOrient = orientacion === '' || item.orientacion === orientacion;
+
+                let matchTicket = true;
+                if (ticketFilter === 'con_ticket') matchTicket = item.ticket !== null;
+                if (ticketFilter === 'sin_ticket') matchTicket = item.ticket === null;
+
+                return matchSearch && matchSucursal && matchStatus && matchOrient && matchTicket;
+            });
+
+            renderTable(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterSucursal').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterOrientacion').value = '';
+            document.getElementById('filterTickets').value = '';
+            renderTable(plannerData);
+        }
+
+        // OPEN MODAL 1: STATS DE CAMPAÑA
+        function openStatsModal(campaignName, posId) {
+            document.getElementById('modalCampaignTitle').innerText = `Campaña: ${campaignName} (${posId})`;
+            
+            // Mock stats data generator per campaign name
+            const randomPlays = Math.floor(Math.random() * 800) + 1100;
+            const randomSov = Math.floor(Math.random() * 15) + 20;
+            
+            document.getElementById('statPlays').innerText = randomPlays.toLocaleString();
+            document.getElementById('statSov').innerText = `${randomSov}%`;
+            document.getElementById('statLoop').innerText = campaignName.includes('3D') ? '20 Seg' : '15 Seg';
+            document.getElementById('statHours').innerText = '12.0 h';
+
+            const pos = plannerData.find(p => p.id === posId);
+            if(pos) {
+                document.getElementById('statTargetDate').innerText = pos.fObjetivo;
+                document.getElementById('statPubDate').innerText = pos.fPub;
+            }
+
+            // Init Chart.js
+            const ctx = document.getElementById('campaignChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+                    datasets: [{
+                        label: 'Impactos / Reproducciones por Hora',
+                        data: [120, 210, 290, 310, 420, 380, 200],
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#22c55e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { grid: { color: '#2e2e2e' }, ticks: { color: '#9ca3af' } },
+                        y: { grid: { color: '#2e2e2e' }, ticks: { color: '#9ca3af' } }
+                    }
+                }
+            });
+
+            document.getElementById('statsModal').classList.remove('hidden');
+        }
+
+        // OPEN MODAL 2: TELEMETRÍA
+        function openTelemetryModal(posId) {
+            const item = plannerData.find(p => p.id === posId);
+            if (!item) return;
+
+            document.getElementById('telemetryTitle').innerText = `Telemetría de Player - ${item.id}`;
+            document.getElementById('telemetrySubtitle').innerText = `${item.sucursal} - ${item.pantalla}`;
+            document.getElementById('telemetryRes').innerText = item.res;
+            document.getElementById('telemetryLoc').innerText = item.ubicacion;
+
+            const banner = document.getElementById('telemetryStatusBanner');
+            const iconBox = document.getElementById('telemetryBadgeIcon');
+
+            if (item.status === 'Online') {
+                banner.className = 'p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between text-xs text-emerald-300';
+                banner.innerHTML = `<div><strong class="text-emerald-400 block font-bold text-sm">🟢 Dispositivo Totalmente Operativo</strong>Hardware en rango térmico normal. Transmitiendo señales en tiempo real.</div>`;
+                iconBox.className = 'p-2.5 rounded-lg text-lg bg-emerald-500/20 text-emerald-400';
+                document.getElementById('telemetryTemp').innerText = '39 °C';
+                document.getElementById('telemetryFps').innerText = '60 FPS';
+                document.getElementById('telemetryPing').innerText = '14 ms';
+                document.getElementById('telemetrySync').innerText = 'Hace 1 min';
+            } else if (item.status === 'Advertencia') {
+                banner.className = 'p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-center justify-between text-xs text-amber-300';
+                banner.innerHTML = `<div><strong class="text-amber-400 block font-bold text-sm">🟡 Alerta Térmica Preventiva</strong>El procesador del reproductor supera la temperatura promedio tolerada (68°C).</div>`;
+                iconBox.className = 'p-2.5 rounded-lg text-lg bg-amber-500/20 text-amber-400';
+                document.getElementById('telemetryTemp').innerText = '68 °C ⚠️';
+                document.getElementById('telemetryFps').innerText = '42 FPS';
+                document.getElementById('telemetryPing').innerText = '82 ms';
+                document.getElementById('telemetrySync').innerText = 'Hace 3 min';
+            } else if (item.status === 'Mantenimiento') {
+                banner.className = 'p-4 rounded-xl border border-blue-500/30 bg-blue-500/10 flex items-center justify-between text-xs text-blue-300';
+                banner.innerHTML = `<div><strong class="text-blue-400 block font-bold text-sm">🛠️ Mantenimiento Técnico Programado</strong>El equipo está siendo intervenido físicamente por el equipo técnico.</div>`;
+                iconBox.className = 'p-2.5 rounded-lg text-lg bg-blue-500/20 text-blue-400';
+                document.getElementById('telemetryTemp').innerText = 'N/A';
+                document.getElementById('telemetryFps').innerText = '0 FPS';
+                document.getElementById('telemetryPing').innerText = 'Sin Respuesta';
+                document.getElementById('telemetrySync').innerText = 'Pausado';
+            } else {
+                banner.className = 'p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 flex items-center justify-between text-xs text-rose-300';
+                banner.innerHTML = `<div><strong class="text-rose-400 block font-bold text-sm">🔴 Desconexión Critica / Offline</strong>El reproductor no envía latido de red (Heartbeat) hace más de 45 minutos.</div>`;
+                iconBox.className = 'p-2.5 rounded-lg text-lg bg-rose-500/20 text-rose-400';
+                document.getElementById('telemetryTemp').innerText = 'Desconocido';
+                document.getElementById('telemetryFps').innerText = '0 FPS';
+                document.getElementById('telemetryPing').innerText = 'Timeout';
+                document.getElementById('telemetrySync').innerText = 'Hace 48 min';
+            }
+
+            document.getElementById('telemetryModal').classList.remove('hidden');
+        }
+
+        function rebootPlayer() {
+            showToast('Enviando comando de reinicio remoto al Player...');
+            closeModal('telemetryModal');
+        }
+
+        // OPEN MODAL 3: TICKETS DE SOPORTE
+        function openTicketModal(posId) {
+            const item = plannerData.find(p => p.id === posId);
+            if (!item) return;
+
+            document.getElementById('ticketPosId').value = posId;
+            document.getElementById('ticketModalSubtitle').innerText = `Posición ${item.id} - ${item.sucursal}`;
+
+            const existingBox = document.getElementById('existingTicketBox');
+            const btnDelete = document.getElementById('btnDeleteTicket');
+
+            if (item.ticket) {
+                document.getElementById('ticketModalTitle').innerText = 'Ticket de Soporte Activo';
+                existingBox.classList.remove('hidden');
+                document.getElementById('existingTicketCode').innerText = item.ticket.code;
+                document.getElementById('existingTicketStatus').innerText = item.ticket.status;
+                document.getElementById('existingTicketDesc').innerText = item.ticket.desc;
+                document.getElementById('ticketNotes').value = item.ticket.desc;
+                btnDelete.classList.remove('hidden');
+            } else {
+                document.getElementById('ticketModalTitle').innerText = 'Crear Nuevo Ticket de Soporte';
+                existingBox.classList.add('hidden');
+                document.getElementById('ticketNotes').value = '';
+                btnDelete.classList.add('hidden');
+            }
+
+            document.getElementById('ticketModal').classList.remove('hidden');
+        }
+
+        function saveTicket(e) {
+            e.preventDefault();
+            const posId = document.getElementById('ticketPosId').value;
+            const issueType = document.getElementById('ticketIssueType').value;
+            const notes = document.getElementById('ticketNotes').value || issueType;
+
+            const item = plannerData.find(p => p.id === posId);
+            if (item) {
+                if (!item.ticket) {
+                    const newCode = `#TK-${Math.floor(1000 + Math.random() * 9000)}`;
+                    item.ticket = {
+                        code: newCode,
+                        desc: notes,
+                        status: 'Asignado'
+                    };
+                    showToast(`Ticket ${newCode} creado para ${posId}`);
+                } else {
+                    item.ticket.desc = notes;
+                    showToast(`Ticket ${item.ticket.code} actualizado correctamente`);
+                }
+            }
+
+            updateKpis();
+            applyFilters();
+            closeModal('ticketModal');
+        }
+
+        function closeTicket() {
+            const posId = document.getElementById('ticketPosId').value;
+            const item = plannerData.find(p => p.id === posId);
+            if (item && item.ticket) {
+                const code = item.ticket.code;
+                item.ticket = null;
+                showToast(`Ticket ${code} resuelto y cerrado`);
+            }
+            updateKpis();
+            applyFilters();
+            closeModal('ticketModal');
+        }
+
+        // Close Modal Utility
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // Toast Helper
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Refresh Data simulate
+        function refreshData() {
+            const now = new Date();
+            const timeStr = `Hoy, ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} HS`;
+            document.getElementById('lastSyncTime').innerText = timeStr;
+            showToast('Datos sincronizados con la nube de Adidas DOOH');
+        }
+
+        // Update KPIs counts
+        function updateKpis() {
+            const ticketCount = plannerData.filter(i => i.ticket !== null).length;
+            document.getElementById('kpiTickets').innerText = ticketCount;
+            document.getElementById('kpiTotal').innerText = plannerData.length;
+        }
+
+        // Init
+        window.onload = function() {
+            renderTable(plannerData);
+            updateKpis();
+        }
+    </script>
+</body>
+</html>
