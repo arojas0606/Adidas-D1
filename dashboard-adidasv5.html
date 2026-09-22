@@ -186,7 +186,7 @@
 
     <script>
         const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR54ie6tdPX730gMJZlr9pbHA6k9TTk2xDaQngdkOIjrYPaPBoIeCjbwKwpYwKAvTBOogRVnPHF0WxB/pub?gid=1681881058&single=true&output=csv';
-        const APPS_SCRIPT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxQTEPv81XKNUYbEaZJWwe4pTqe7lwtjdq_3Ik4WAK_M33mPEeIeeLE5PTEEVFrdwXs/exec';
+        const APPS_SCRIPT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxQTEPv81XKNUYbEaZJWwe4pTqe7lwtjdq_3Ink4WAK_M33mPEeIeeLE5PTEEVFrdwXs/exec';
 
         let screensData = [];
 
@@ -208,17 +208,16 @@
                     const stats_url = row[idIndex + 18] ? row[idIndex + 18].trim() : '';
                     const direccion = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
                     
-                    // LECTURA DINÁMICA DE TICKET DESDE EXCEL
-                    // Revisa las columnas de observaciones (16 y 21+) buscando número o link
+                    // LECTURA EXCLUSIVA Y PERSISTENTE DESDE GOOGLE SHEETS
                     let ticket_info = null;
                     const possibleObs = [
                         row[idIndex + 16] ? row[idIndex + 16].trim() : '',
                         row[idIndex + 21] ? row[idIndex + 21].trim() : '',
                         row[idIndex + 22] ? row[idIndex + 22].trim() : '',
                         row[idIndex + 23] ? row[idIndex + 23].trim() : ''
-                    ].join(' ');
+                    ].filter(str => str !== '').join(' ');
 
-                    if (possibleObs.trim().length > 0 && (possibleObs.includes('TK-') || possibleObs.includes('http') || possibleObs.includes('freshdesk'))) {
+                    if (possibleObs.length > 0 && (possibleObs.includes('TK-') || possibleObs.includes('http') || possibleObs.includes('freshdesk'))) {
                         const urlMatch = possibleObs.match(/https?:\/\/[^\s"]+/);
                         const ticketMatch = possibleObs.match(/#?TK-[\w\d]+/i) || possibleObs.match(/TK-[\w\d]+/i);
                         
@@ -228,7 +227,7 @@
                         };
                     }
 
-                    // Estado controlado manualmente por Excel
+                    // Estado controlado por el operador en el Excel
                     const isManualOffline = estado.toLowerCase().includes('off') || estado.toLowerCase().includes('paus') || estado.toLowerCase().includes('caid');
 
                     result.push({
@@ -499,7 +498,7 @@
                         Esta posición <strong>${id}</strong> (${screen ? screen.sucursal : 'Tienda'}) tiene una incidencia técnica registrada en el planificador.
                     </p>
                     <div class="text-[10px] text-neutral-400 pt-2 border-t border-neutral-800 flex justify-between">
-                        <span>ESTADO: EN REVISIÓN DE OPERADOR</span>
+                        <span>ESTADO: EN REVISIÓN</span>
                         <span>SLA ESTIMADO: &lt; 4 HORAS</span>
                     </div>
                     <button onclick="closeModal('ticketModal')" class="w-full bg-white text-black py-2 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-neutral-200 transition mt-2">
@@ -567,8 +566,6 @@
                         </button>
                     </div>
                 `;
-
-                setTimeout(fetchSheetsData, 1500);
 
             } catch (err) {
                 console.error("Error al enviar el ticket:", err);
