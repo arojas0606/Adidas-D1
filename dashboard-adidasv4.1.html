@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adidas - Dashboard de Pantallas & Campañas 2026</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;0,900;1,700;1,900&display=swap');
+        
+        body { 
+            font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif; 
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+        .adidas-font-title {
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+        .bg-dark-card { background-color: #0D0D0D; }
+        .border-dark { border-color: #1F1F1F; }
+        .bg-date-pill { background-color: #1A1A1A; }
+        
+        .tab-btn.active {
+            border-bottom: 2px solid #FFFFFF;
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <div>
+        <!-- Header Principal Navbar -->
+        <header class="bg-black border-b border-neutral-800 px-6 py-4 sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+                <div class="flex items-center space-x-4">
+                    <i class="fa-brands fa-adidas text-4xl text-white"></i>
+                    <div class="h-8 w-px bg-neutral-800"></div>
+                    <div>
+                        <h1 class="text-lg font-black tracking-wider uppercase">PLANIFICADOR DE PANTALLAS 2026</h1>
+                        <p class="text-[11px] text-neutral-400">Control de Campañas, Telemetría y Soporte Técnico</p>
+                    </div>
+                </div>
+                <!-- Branding Convergencia Digital -->
+                <div class="flex items-center space-x-4">
+                    <div class="text-right hidden sm:block">
+                        <span class="text-[9px] text-neutral-500 block uppercase tracking-widest">Powered by</span>
+                        <span class="text-xs font-bold text-neutral-300">Convergencia Digital</span>
+                    </div>
+                    <span id="syncStatus" class="bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1.5">
+                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span> Sincronizado en Vivo
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
+
+            <!-- SECTOR: ESTADO DE RED & CAMPAÑAS ACTIVAS -->
+            <div class="space-y-4">
+                <div class="flex flex-wrap justify-between items-end border-b border-neutral-800 pb-3 gap-2">
+                    <div>
+                        <span class="text-[10px] text-neutral-500 font-bold tracking-widest uppercase block">ESTADO DE RED</span>
+                        <h2 class="text-3xl md:text-4xl adidas-font-title text-white">CAMPAÑAS ACTIVAS</h2>
+                    </div>
+                    <div class="text-right text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                        <div>ACTUALIZADO: EN TIEMPO REAL</div>
+                        <div class="text-neutral-500">FUENTE: CONVERGENCIA DIGITAL / GOOGLE SHEETS</div>
+                    </div>
+                </div>
+
+                <!-- Banner Resumen Global Blanco -->
+                <div class="bg-white text-black p-6 rounded-none flex flex-wrap justify-between items-center shadow-2xl gap-4">
+                    <div>
+                        <h3 class="text-2xl md:text-3xl adidas-font-title leading-tight">RESUMEN<br>GLOBAL</h3>
+                    </div>
+                    <div class="flex items-center space-x-8 sm:space-x-12 text-right">
+                        <div>
+                            <span id="kpiCampaignsCount" class="text-4xl sm:text-5xl font-black block leading-none">0</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-600">CAMPAÑAS</span>
+                        </div>
+                        <div>
+                            <span id="kpiScreensCount" class="text-4xl sm:text-5xl font-black block leading-none">0</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-600">POSICIONES</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navegación por Pestañas -->
+            <div class="bg-dark-card rounded-xl border border-dark p-2 flex flex-wrap justify-between items-center gap-4">
+                <div class="flex space-x-2 border-b border-neutral-800 sm:border-0 w-full sm:w-auto">
+                    <button id="tab1-btn" onclick="switchTab('tab1')" class="tab-btn active px-4 py-2 text-xs uppercase tracking-wider font-bold text-neutral-400 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group"></i> 1. Tiendas Agrupadas por Campañas
+                    </button>
+                    <button id="tab2-btn" onclick="switchTab('tab2')" class="tab-btn px-4 py-2 text-xs uppercase tracking-wider font-bold text-neutral-400 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-desktop"></i> 2. Posiciones Individuales
+                    </button>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-lg w-full sm:w-72 text-xs">
+                    <i class="fa-solid fa-magnifying-glass text-neutral-500"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar campaña, tienda..." class="bg-transparent w-full text-white focus:outline-none placeholder-neutral-500">
+                </div>
+            </div>
+
+            <!-- APARTADO 1: TIENDAS AGRUPADAS POR CAMPAÑAS -->
+            <section id="tab1-content" class="space-y-4">
+                <div id="campaignsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            </section>
+
+            <!-- APARTADO 2: POSICIONES INDIVIDUALES -->
+            <section id="tab2-content" class="hidden space-y-4">
+                <div class="bg-dark-card rounded-xl border border-dark overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-neutral-900 text-neutral-400 text-[11px] uppercase tracking-wider font-bold border-b border-neutral-800">
+                                <th class="p-3.5">ID</th>
+                                <th class="p-3.5">Sucursal / Dirección</th>
+                                <th class="p-3.5">Detalle Técnico Pantalla</th>
+                                <th class="p-3.5">Ubicación en Tienda</th>
+                                <th class="p-3.5">Campaña Activa</th>
+                                <th class="p-3.5">Estatus Player</th>
+                                <th class="p-3.5">Soporte Técnico</th>
+                            </tr>
+                        </thead>
+                        <tbody id="individualTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-black border-t border-neutral-800 mt-12 py-6 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-neutral-500">
+            <div>Plataforma de Control Digital © 2026 Adidas</div>
+            <div class="flex items-center space-x-3 bg-neutral-900 px-4 py-2 rounded-xl border border-neutral-800">
+                <span class="text-neutral-500 text-[11px]">Desarrollado e Integrado por</span>
+                <span class="font-bold text-white tracking-wider uppercase">CONVERGENCIA DIGITAL</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Ticket -->
+    <div id="ticketModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-dark-card border border-neutral-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative text-white">
+            <button onclick="closeModal('ticketModal')" class="absolute top-4 right-4 text-neutral-500 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-base font-bold uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-ticket text-amber-400"></i> Gestión de Ticket de Soporte</h3>
+            <div id="ticketContent" class="mt-4 space-y-3 text-xs"></div>
+        </div>
+    </div>
+
+    <script>
+        // PEGA AQUÍ LA URL DE TU GOOGLE SHEETS PUBLICADO EN CSV:
+        const GOOGLE_SHEETS_CSV_URL = 'PEGA_AQUI_TU_ENLACE_CSV_DE_GOOGLE_SHEETS';
+
+        let screensData = [];
+
+        function parseCSV(text) {
+            const lines = text.split('\n').filter(l => l.trim() !== '');
+            const result = [];
+            // Ignorar encabezados principales si están en las primeras filas
+            for (let i = 0; i < lines.length; i++) {
+                const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                if (cols[0] && cols[0].startsWith('ADI-')) {
+                    result.push({
+                        id: cols[0],
+                        sucursal: cols[1] || 'Sin Nombre',
+                        pantalla: cols[2] || 'Pantalla LED',
+                        orientacion: cols[3] || 'Horizontal',
+                        res: cols[4] || '1080x1920',
+                        ubicacion: cols[5] || 'En local',
+                        camp: cols[6] || 'Sin Campaña',
+                        fecha_inicio: cols[9] || '2026-01-01',
+                        estado: cols[10] || 'Publicado',
+                        stats_url: cols[18] || 'https://play.ar.cityscreen.cloud',
+                        direccion: cols[19] || '',
+                        status: 'Online',
+                        ticket: null
+                    });
+                }
+            }
+            return result;
+        }
+
+        async function fetchSheetsData() {
+            if (GOOGLE_SHEETS_CSV_URL.includes('PEGA_AQUI')) {
+                console.warn("Utilizando datos locales de respaldo.");
+                return;
+            }
+            try {
+                const response = await fetch(GOOGLE_SHEETS_CSV_URL);
+                const csvText = await response.text();
+                const parsed = parseCSV(csvText);
+                if (parsed.length > 0) {
+                    screensData = parsed;
+                    renderTab1();
+                    renderTab2();
+                    updateKPIs();
+                }
+            } catch (err) {
+                console.error("Error al sincronizar con Google Sheets:", err);
+            }
+        }
+
+        function updateKPIs() {
+            document.getElementById('kpiScreensCount').innerText = screensData.length;
+            const uniqueCamps = new Set(screensData.map(s => s.camp)).size;
+            document.getElementById('kpiCampaignsCount').innerText = uniqueCamps;
+        }
+
+        function getPlayerStatusBadge(st) {
+            if (st === 'Online') return `<span class="bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[11px] px-2.5 py-1 rounded-full font-bold inline-flex items-center"><i class="fa-solid fa-circle text-[7px] mr-1.5"></i> ONLINE</span>`;
+            return `<span class="bg-red-950/80 border border-red-500/30 text-red-400 text-[11px] px-2.5 py-1 rounded-full font-bold inline-flex items-center"><i class="fa-solid fa-power-off text-[7px] mr-1.5"></i> OFFLINE</span>`;
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab1-content').classList.add('hidden');
+            document.getElementById('tab2-content').classList.add('hidden');
+
+            document.getElementById(`${tabId}-btn`).classList.add('active');
+            document.getElementById(`${tabId}-content`).classList.remove('hidden');
+        }
+
+        function renderTab1(filterText = '') {
+            const container = document.getElementById('campaignsContainer');
+            container.innerHTML = '';
+
+            const filtered = screensData.filter(item => {
+                const s = filterText.toLowerCase();
+                return item.camp.toLowerCase().includes(s) ||
+                       item.sucursal.toLowerCase().includes(s) ||
+                       item.id.toLowerCase().includes(s);
+            });
+
+            const grouped = filtered.reduce((acc, curr) => {
+                const key = curr.camp.trim();
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(curr);
+                return acc;
+            }, {});
+
+            if (Object.keys(grouped).length === 0) {
+                container.innerHTML = `<div class="col-span-2 p-8 text-center bg-dark-card rounded-xl text-neutral-500">Cargando o sin coincidencias...</div>`;
+                return;
+            }
+
+            Object.entries(grouped).forEach(([campName, items]) => {
+                const card = document.createElement('div');
+                card.className = "bg-dark-card rounded-xl border border-dark p-5 flex flex-col justify-between space-y-4 shadow-xl";
+
+                let storesSet = new Set();
+                items.forEach(s => storesSet.add(s.sucursal.toUpperCase()));
+
+                let storesHtml = Array.from(storesSet).map(storeStr => `
+                    <div class="py-2.5 border-b border-neutral-900 text-xs font-bold tracking-wider text-neutral-300">
+                        ${storeStr}
+                    </div>
+                `).join('');
+
+                const statsUrl = items[0].stats_url && items[0].stats_url.startsWith('http') ? items[0].stats_url : 'https://play.ar.cityscreen.cloud';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex flex-wrap justify-between items-start gap-2 mb-3">
+                            <h2 class="text-2xl font-black italic uppercase tracking-tight text-white">${campName}</h2>
+                            <a href="${statsUrl}" target="_blank" class="bg-white hover:bg-neutral-200 text-black text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded transition shadow-md inline-flex items-center gap-1">
+                                PERFORMANCE REAL TIME <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-1"></i>
+                            </a>
+                        </div>
+                        <div class="inline-block bg-date-pill text-neutral-400 text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider mb-4">
+                            INICIO: ${items[0].fecha_inicio}
+                        </div>
+                        <div class="mt-2 space-y-1">
+                            ${storesHtml}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderTab2(filterText = '') {
+            const tbody = document.getElementById('individualTableBody');
+            tbody.innerHTML = '';
+
+            const filtered = screensData.filter(item => {
+                const s = filterText.toLowerCase();
+                return item.camp.toLowerCase().includes(s) ||
+                       item.sucursal.toLowerCase().includes(s) ||
+                       item.id.toLowerCase().includes(s);
+            });
+
+            filtered.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = "border-t border-neutral-800 hover:bg-neutral-900/50 transition text-xs";
+                tr.innerHTML = `
+                    <td class="p-3.5 font-black text-white">${s.id}</td>
+                    <td class="p-3.5">
+                        <div class="font-bold text-neutral-200">${s.sucursal}</div>
+                        <div class="text-[10px] text-neutral-500">${s.direccion}</div>
+                    </td>
+                    <td class="p-3.5">
+                        <div class="font-medium text-neutral-300">${s.pantalla}</div>
+                        <div class="text-[10px] text-neutral-500">${s.res} | ${s.orientacion}</div>
+                    </td>
+                    <td class="p-3.5 text-neutral-400">${s.ubicacion}</td>
+                    <td class="p-3.5"><span class="bg-neutral-800 text-white border border-neutral-700 px-2.5 py-1 rounded font-bold text-[10px] uppercase tracking-wider">${s.camp}</span></td>
+                    <td class="p-3.5">${getPlayerStatusBadge(s.status)}</td>
+                    <td class="p-3.5">
+                        <button onclick="openTicketModal('${s.id}')" class="text-neutral-400 hover:text-white text-[10px] bg-neutral-800 border border-neutral-700 px-2.5 py-1 rounded font-bold uppercase tracking-wider transition"><i class="fa-solid fa-plus mr-1"></i> Crear Ticket</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openTicketModal(id) {
+            const screen = screensData.find(s => s.id === id);
+            const content = document.getElementById('ticketContent');
+            content.innerHTML = `
+                <div class="space-y-3">
+                    <p class="text-neutral-300">Crear una nueva incidencia técnica para la pantalla <strong>${screen.id}</strong> (${screen.sucursal}).</p>
+                    <textarea class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-white focus:ring-1 focus:ring-white outline-none" rows="3" placeholder="Describe la falla observada..."></textarea>
+                    <button onclick="alert('Ticket registrado para ${screen.id}'); closeModal('ticketModal');" class="w-full bg-white text-black py-2 rounded-lg font-bold uppercase tracking-wider hover:bg-neutral-200">Registrar Incidencia</button>
+                </div>
+            `;
+            document.getElementById('ticketModal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const val = e.target.value;
+            renderTab1(val);
+            renderTab2(val);
+        });
+
+        // Cargar desde Google Sheets al iniciar y refrescar cada 30s
+        fetchSheetsData();
+        setInterval(fetchSheetsData, 30000);
+    </script>
+</body>
+</html>
