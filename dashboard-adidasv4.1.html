@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PapaParse para lectura precisa de CSV con comas en direcciones -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;0,900;1,700;1,900&display=swap');
         
@@ -54,7 +56,7 @@
                         <span class="text-xs font-bold text-neutral-300">Convergencia Digital</span>
                     </div>
                     <span id="syncStatus" class="bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1.5">
-                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span> Sincronizado en Vivo
+                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span> Sincronizado con Sheets
                     </span>
                 </div>
             </div>
@@ -71,7 +73,7 @@
                     </div>
                     <div class="text-right text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
                         <div>ACTUALIZADO: EN TIEMPO REAL</div>
-                        <div class="text-neutral-500">FUENTE: CONVERGENCIA DIGITAL / GOOGLE SHEETS</div>
+                        <div class="text-neutral-500">FUENTE: CONVERGENCIA DIGITAL / PLANIFICADOR SHEETS</div>
                     </div>
                 </div>
 
@@ -158,56 +160,66 @@
     </div>
 
     <script>
-        // PEGA AQUÍ LA URL DE TU GOOGLE SHEETS PUBLICADO EN CSV:
-        const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR54ie6tdPX730gMJZlr9pbHA6k9TTk2xDaQngdkOIjrYPaPBoIeCjbwKwpYwKAvTBOogRVnPHF0WxB/pub?output=csv';
+        // URL Específica de la Solapa PLANIFICADOR
+        const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR54ie6tdPX730gMJZlr9pbHA6k9TTk2xDaQngdkOIjrYPaPBoIeCjbwKwpYwKAvTBOogRVnPHF0WxB/pub?gid=1681881058&single=true&output=csv';
 
         let screensData = [];
 
-        function parseCSV(text) {
-            const lines = text.split('\n').filter(l => l.trim() !== '');
+        function parseCSVData(rows) {
             const result = [];
-            // Ignorar encabezados principales si están en las primeras filas
-            for (let i = 0; i < lines.length; i++) {
-                const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
-                if (cols[0] && cols[0].startsWith('ADI-')) {
+            rows.forEach(row => {
+                if (!row || row.length === 0) return;
+                const idIndex = row.findIndex(cell => cell && cell.toString().trim().startsWith('ADI-'));
+                if (idIndex !== -1) {
+                    const id = row[idIndex].trim();
+                    const sucursal = row[idIndex + 1] ? row[idIndex + 1].trim() : 'Sin Nombre';
+                    const pantalla = row[idIndex + 2] ? row[idIndex + 2].trim() : 'Pantalla LED';
+                    const orientacion = row[idIndex + 3] ? row[idIndex + 3].trim() : 'Horizontal';
+                    const res = row[idIndex + 4] ? row[idIndex + 4].trim() : '1080x1920';
+                    const ubicacion = row[idIndex + 5] ? row[idIndex + 5].trim() : 'En local';
+                    const camp = row[idIndex + 6] ? row[idIndex + 6].trim() : 'Sin Campaña';
+                    const fecha_inicio = row[idIndex + 9] ? row[idIndex + 9].trim() : '2026-01-01';
+                    const estado = row[idIndex + 10] ? row[idIndex + 10].trim() : 'Publicado';
+                    const stats_url = row[idIndex + 18] ? row[idIndex + 18].trim() : '';
+                    const direccion = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
+
                     result.push({
-                        id: cols[0],
-                        sucursal: cols[1] || 'Sin Nombre',
-                        pantalla: cols[2] || 'Pantalla LED',
-                        orientacion: cols[3] || 'Horizontal',
-                        res: cols[4] || '1080x1920',
-                        ubicacion: cols[5] || 'En local',
-                        camp: cols[6] || 'Sin Campaña',
-                        fecha_inicio: cols[9] || '2026-01-01',
-                        estado: cols[10] || 'Publicado',
-                        stats_url: cols[18] || 'https://play.ar.cityscreen.cloud',
-                        direccion: cols[19] || '',
+                        id,
+                        sucursal,
+                        pantalla,
+                        orientacion,
+                        res,
+                        ubicacion,
+                        camp,
+                        fecha_inicio,
+                        estado,
+                        stats_url: stats_url.startsWith('http') ? stats_url : 'https://play.ar.cityscreen.cloud',
+                        direccion,
                         status: 'Online',
                         ticket: null
                     });
                 }
-            }
+            });
             return result;
         }
 
-        async function fetchSheetsData() {
-            if (GOOGLE_SHEETS_CSV_URL.includes('PEGA_AQUI')) {
-                console.warn("Utilizando datos locales de respaldo.");
-                return;
-            }
-            try {
-                const response = await fetch(GOOGLE_SHEETS_CSV_URL);
-                const csvText = await response.text();
-                const parsed = parseCSV(csvText);
-                if (parsed.length > 0) {
-                    screensData = parsed;
-                    renderTab1();
-                    renderTab2();
-                    updateKPIs();
+        function fetchSheetsData() {
+            Papa.parse(GOOGLE_SHEETS_CSV_URL, {
+                download: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const parsed = parseCSVData(results.data);
+                    if (parsed.length > 0) {
+                        screensData = parsed;
+                        renderTab1();
+                        renderTab2();
+                        updateKPIs();
+                    }
+                },
+                error: function(err) {
+                    console.error("Error al descargar el CSV desde Google Sheets:", err);
                 }
-            } catch (err) {
-                console.error("Error al sincronizar con Google Sheets:", err);
-            }
+            });
         }
 
         function updateKPIs() {
@@ -249,7 +261,7 @@
             }, {});
 
             if (Object.keys(grouped).length === 0) {
-                container.innerHTML = `<div class="col-span-2 p-8 text-center bg-dark-card rounded-xl text-neutral-500">Cargando o sin coincidencias...</div>`;
+                container.innerHTML = `<div class="col-span-2 p-8 text-center bg-dark-card rounded-xl text-neutral-500">Cargando datos desde Google Sheets...</div>`;
                 return;
             }
 
@@ -266,7 +278,7 @@
                     </div>
                 `).join('');
 
-                const statsUrl = items[0].stats_url && items[0].stats_url.startsWith('http') ? items[0].stats_url : 'https://play.ar.cityscreen.cloud';
+                const statsUrl = items[0].stats_url || 'https://play.ar.cityscreen.cloud';
 
                 card.innerHTML = `
                     <div>
@@ -346,7 +358,7 @@
             renderTab2(val);
         });
 
-        // Cargar desde Google Sheets al iniciar y refrescar cada 30s
+        // Cargar datos y refrescar cada 30 segundos
         fetchSheetsData();
         setInterval(fetchSheetsData, 30000);
     </script>
