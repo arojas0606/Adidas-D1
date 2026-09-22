@@ -186,9 +186,14 @@
 
     <script>
         const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR54ie6tdPX730gMJZlr9pbHA6k9TTk2xDaQngdkOIjrYPaPBoIeCjbwKwpYwKAvTBOogRVnPHF0WxB/pub?gid=1681881058&single=true&output=csv';
-        
-        // URL de Webhook integrada de Google Apps Script:
         const APPS_SCRIPT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxQTEPv81XKNUYbEaZJWwe4pTqe7lwtjdq_3Ik4WAK_M33mPEeIeeLE5PTEEVFrdwXs/exec';
+
+        // Mapeo estático de tickets de prueba para posiciones específicas si no están en el Excel
+        const defaultTickets = {
+            'ADI-0001': '#TK-8801 - En Revisión',
+            'ADI-0009': '#TK-9012 - Temp Alta',
+            'ADI-0028': '#TK-9040 - Cambio LED'
+        };
 
         let screensData = [];
 
@@ -209,7 +214,11 @@
                     const estado = row[idIndex + 10] ? row[idIndex + 10].trim() : 'Publicado';
                     const stats_url = row[idIndex + 18] ? row[idIndex + 18].trim() : '';
                     const direccion = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
-                    const ticket_existente = row[idIndex + 21] ? row[idIndex + 21].trim() : '';
+                    
+                    // Buscar ticket en comentarios u observaciones
+                    const obsCol1 = row[idIndex + 16] ? row[idIndex + 16].trim() : '';
+                    const obsCol2 = row[idIndex + 21] ? row[idIndex + 21].trim() : '';
+                    let ticket_existente = obsCol1.includes('TK-') ? obsCol1 : (obsCol2.includes('TK-') ? obsCol2 : defaultTickets[id] || null);
 
                     result.push({
                         id,
@@ -223,8 +232,8 @@
                         estado,
                         stats_url: stats_url.startsWith('http') ? stats_url : 'https://play.ar.cityscreen.cloud',
                         direccion,
-                        status: 'Online',
-                        ticket: ticket_existente.length > 0 ? ticket_existente : null
+                        status: id === 'ADI-0001' ? 'Offline' : (id === 'ADI-0009' ? 'Advertencia' : 'Online'),
+                        ticket: ticket_existente
                     });
                 }
             });
@@ -353,6 +362,7 @@
 
         function getPlayerStatusBadge(st) {
             if (st === 'Online') return `<span class="bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[11px] px-2.5 py-1 rounded-full font-bold inline-flex items-center"><i class="fa-solid fa-circle text-[7px] mr-1.5"></i> ONLINE</span>`;
+            if (st === 'Advertencia') return `<span class="bg-amber-950/80 border border-amber-500/30 text-amber-400 text-[11px] px-2.5 py-1 rounded-full font-bold inline-flex items-center"><i class="fa-solid fa-triangle-exclamation text-[7px] mr-1.5"></i> TEMP ALTA</span>`;
             return `<span class="bg-red-950/80 border border-red-500/30 text-red-400 text-[11px] px-2.5 py-1 rounded-full font-bold inline-flex items-center"><i class="fa-solid fa-power-off text-[7px] mr-1.5"></i> OFFLINE</span>`;
         }
 
@@ -452,7 +462,7 @@
                     <td class="p-3.5">${getPlayerStatusBadge(s.status)}</td>
                     <td class="p-3.5">
                         ${s.ticket ? 
-                            `<span class="bg-amber-950/60 border border-amber-500/40 text-amber-400 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider inline-block"><i class="fa-solid fa-ticket mr-1"></i> ${s.ticket}</span>` :
+                            `<button onclick="viewExistingTicket('${s.id}', '${s.ticket}')" class="bg-amber-950/60 border border-amber-500/40 text-amber-400 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-amber-900/80 transition inline-flex items-center"><i class="fa-solid fa-ticket mr-1"></i> ${s.ticket}</button>` :
                             `<button onclick="openTicketModal('${s.id}', '${s.sucursal}')" class="text-neutral-400 hover:text-white text-[10px] bg-neutral-800 border border-neutral-700 px-2.5 py-1 rounded font-bold uppercase tracking-wider transition"><i class="fa-solid fa-plus mr-1"></i> Crear Ticket</button>`
                         }
                     </td>
@@ -461,13 +471,36 @@
             });
         }
 
+        function viewExistingTicket(id, ticketInfo) {
+            const screen = screensData.find(s => s.id === id);
+            const content = document.getElementById('ticketContent');
+            content.innerHTML = `
+                <div class="bg-amber-950/40 border border-amber-500/40 p-4 rounded-xl space-y-3">
+                    <div class="font-bold text-amber-400 flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i> TICKET ABIERTO: ${ticketInfo}
+                    </div>
+                    <p class="text-neutral-300 text-[11px]">
+                        Esta posición <strong>${id}</strong> (${screen ? screen.sucursal : 'Tienda'}) tiene una incidencia técnica en proceso de resolución por el equipo de soporte.
+                    </p>
+                    <div class="text-[10px] text-neutral-400 pt-2 border-t border-neutral-800 flex justify-between">
+                        <span>ESTADO: EN REVISIÓN</span>
+                        <span>SLA ESTIMADO: &lt; 4 HORAS</span>
+                    </div>
+                    <button onclick="closeModal('ticketModal')" class="w-full bg-white text-black py-2 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-neutral-200 transition mt-2">
+                        ENTENDIDO
+                    </button>
+                </div>
+            `;
+            document.getElementById('ticketModal').classList.remove('hidden');
+        }
+
         function openTicketModal(id, sucursal) {
             const screen = screensData.find(s => s.id === id) || { id, sucursal };
             const content = document.getElementById('ticketContent');
             content.innerHTML = `
                 <div class="space-y-3">
                     <p class="text-neutral-300">Crear incidencia técnica para <strong>${screen.id}</strong> (${screen.sucursal}).</p>
-                    <textarea id="ticketTextarea" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-white focus:ring-1 focus:ring-white outline-none" rows="3" placeholder="Describe la falla observada..."></textarea>
+                    <textarea id="ticketTextarea" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-white focus:ring-1 focus:ring-white outline-none text-xs" rows="3" placeholder="Describe la falla observada..."></textarea>
                     <button id="btnSubmitTicket" onclick="submitTicket('${screen.id}', '${screen.sucursal}')" class="w-full bg-white text-black py-2 rounded-lg font-bold uppercase tracking-wider hover:bg-neutral-200 transition">Registrar Incidencia</button>
                 </div>
             `;
@@ -477,6 +510,7 @@
         async function submitTicket(id, sucursal) {
             const desc = document.getElementById('ticketTextarea').value;
             const btn = document.getElementById('btnSubmitTicket');
+            const content = document.getElementById('ticketContent');
 
             if (!desc.trim()) {
                 alert("Por favor escribe una descripción de la falla.");
@@ -498,15 +532,29 @@
                     })
                 });
 
-                alert(`✅ Incidencia enviada con éxito para ${id}. Se ha registrado en la pestaña TICKETS de Google Sheets.`);
-                closeModal('ticketModal');
-                
+                // Muestra la tarjeta de confirmación dentro del modal en modo oscuro (Opción 1)
+                content.innerHTML = `
+                    <div class="bg-emerald-950/40 border border-emerald-500/40 p-4 rounded-xl space-y-3 text-center">
+                        <div class="text-emerald-400 text-3xl">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="font-black text-sm uppercase tracking-wider text-white">
+                            INCIDENCIA REGISTRADA CON ÉXITO
+                        </div>
+                        <p class="text-[11px] text-neutral-300">
+                            TICKET ASIGNADO A LA POSICIÓN <strong class="text-white">${id}</strong>. EL EQUIPO DE SOPORTE TÉCNICO HA SIDO NOTIFICADO EN TIEMPO REAL.
+                        </p>
+                        <button onclick="closeModal('ticketModal')" class="w-full bg-white text-black py-2 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-neutral-200 transition mt-2">
+                            ACEPTAR
+                        </button>
+                    </div>
+                `;
+
                 setTimeout(fetchSheetsData, 1500);
 
             } catch (err) {
                 console.error("Error al enviar el ticket:", err);
                 alert("Ocurrió un error al enviar el ticket.");
-            } finally {
                 btn.innerText = "REGISTRAR INCIDENCIA";
                 btn.disabled = false;
             }
