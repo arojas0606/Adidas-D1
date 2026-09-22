@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- PapaParse para lectura precisa de CSV con comas en direcciones -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Chart.js para gráficos de torta interactivos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;0,900;1,700;1,900&display=swap');
         
@@ -93,6 +95,27 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Módulo de Gráficos de Torta Dinámicos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-dark-card border border-dark p-4 rounded-lg">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-white border-b border-neutral-800 pb-2 mb-3">
+                            DISTRIBUCIÓN POR ORIENTACIÓN
+                        </h4>
+                        <div class="h-44 relative">
+                            <canvas id="orientacionPieChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-dark-card border border-dark p-4 rounded-lg">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-white border-b border-neutral-800 pb-2 mb-3">
+                            ESTATUS OPERATIVO DE RED
+                        </h4>
+                        <div class="h-44 relative">
+                            <canvas id="statusPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Navegación por Pestañas -->
@@ -164,6 +187,8 @@
         const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR54ie6tdPX730gMJZlr9pbHA6k9TTk2xDaQngdkOIjrYPaPBoIeCjbwKwpYwKAvTBOogRVnPHF0WxB/pub?gid=1681881058&single=true&output=csv';
 
         let screensData = [];
+        let chartOrientacion = null;
+        let chartStatus = null;
 
         function parseCSVData(rows) {
             const result = [];
@@ -214,6 +239,7 @@
                         renderTab1();
                         renderTab2();
                         updateKPIs();
+                        renderPieCharts();
                     }
                 },
                 error: function(err) {
@@ -226,6 +252,66 @@
             document.getElementById('kpiScreensCount').innerText = screensData.length;
             const uniqueCamps = new Set(screensData.map(s => s.camp)).size;
             document.getElementById('kpiCampaignsCount').innerText = uniqueCamps;
+        }
+
+        function renderPieCharts() {
+            if (screensData.length === 0) return;
+
+            const verticalCount = screensData.filter(s => s.orientacion.toLowerCase().includes('vert')).length;
+            const horizontalCount = screensData.filter(s => s.orientacion.toLowerCase().includes('horiz')).length;
+
+            const onlineCount = screensData.filter(s => s.status === 'Online').length;
+            const offlineCount = screensData.filter(s => s.status === 'Offline').length;
+
+            // Gráfico de Orientación
+            const ctxOrientacion = document.getElementById('orientacionPieChart');
+            if (ctxOrientacion) {
+                if (chartOrientacion) chartOrientacion.destroy();
+                chartOrientacion = new Chart(ctxOrientacion, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Vertical', 'Horizontal'],
+                        datasets: [{
+                            data: [verticalCount, horizontalCount],
+                            backgroundColor: ['#FFFFFF', '#404040'],
+                            borderColor: '#0D0D0D',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { color: '#A3A3A3', font: { family: 'Montserrat', size: 10 } } }
+                        }
+                    }
+                });
+            }
+
+            // Gráfico de Estatus Operativo
+            const ctxStatus = document.getElementById('statusPieChart');
+            if (ctxStatus) {
+                if (chartStatus) chartStatus.destroy();
+                chartStatus = new Chart(ctxStatus, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Online', 'Offline'],
+                        datasets: [{
+                            data: [onlineCount, offlineCount],
+                            backgroundColor: ['#10B981', '#EF4444'],
+                            borderColor: '#0D0D0D',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { color: '#A3A3A3', font: { family: 'Montserrat', size: 10 } } }
+                        }
+                    }
+                });
+            }
         }
 
         function getPlayerStatusBadge(st) {
