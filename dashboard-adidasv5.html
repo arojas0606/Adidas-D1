@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adidas - Digital Display Manager 2026</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PapaParse para lectura precisa de CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;0,900;1,700;1,900&display=swap');
+        
+        body { 
+            font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif; 
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+        .adidas-font-title {
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+        .bg-dark-card { background-color: #0D0D0D; }
+        .border-dark { border-color: #1F1F1F; }
+        .bg-date-pill { background-color: #1A1A1A; }
+        
+        .tab-btn.active {
+            border-bottom: 2px solid #FFFFFF;
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <div>
+        <!-- Header Principal Navbar -->
+        <header class="bg-black border-b border-neutral-800 px-6 py-4 sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+                <div class="flex items-center space-x-4">
+                    <i class="fa-brands fa-adidas text-4xl text-white"></i>
+                    <div class="h-8 w-px bg-neutral-800"></div>
+                    <div>
+                        <h1 class="text-lg font-black tracking-wider uppercase">DIGITAL DISPLAY MANAGER 2026</h1>
+                        <p class="text-[11px] text-neutral-400">Control de campañas y pantallas</p>
+                    </div>
+                </div>
+                <!-- Branding Convergencia Digital -->
+                <div class="flex items-center space-x-4">
+                    <div class="text-right hidden sm:block">
+                        <span class="text-[9px] text-neutral-500 block uppercase tracking-widest">Powered by</span>
+                        <span class="text-xs font-bold text-neutral-300">Convergencia Digital</span>
+                    </div>
+                    <span id="syncStatus" class="bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1.5">
+                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span> Sincronizado en tiempo real
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
+
+            <!-- SECTOR: ESTADO DE RED & CAMPAÑAS ACTIVAS -->
+            <div class="space-y-4">
+                <div class="flex flex-wrap justify-between items-end border-b border-neutral-800 pb-3 gap-2">
+                    <div>
+                        <span class="text-[10px] text-neutral-500 font-bold tracking-widest uppercase block">ESTADO DE RED</span>
+                        <h2 class="text-3xl md:text-4xl adidas-font-title text-white">CAMPAÑAS ACTIVAS</h2>
+                    </div>
+                </div>
+
+                <!-- Banner Resumen Global Blanco -->
+                <div class="bg-white text-black p-6 rounded-none flex flex-wrap justify-between items-center shadow-2xl gap-4">
+                    <div>
+                        <h3 class="text-2xl md:text-3xl adidas-font-title leading-tight">RESUMEN<br>GLOBAL</h3>
+                    </div>
+                    <div class="flex items-center space-x-8 sm:space-x-12 text-right">
+                        <div>
+                            <span id="kpiCampaignsCount" class="text-4xl sm:text-5xl font-black block leading-none">0</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-600">CAMPAÑAS</span>
+                        </div>
+                        <div>
+                            <span id="kpiScreensCount" class="text-4xl sm:text-5xl font-black block leading-none">0</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-600">POSICIONES</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fila de 3 Módulos Analíticos -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    
+                    <!-- Módulo 1: Top Posiciones x Campaña -->
+                    <div class="bg-dark-card border border-dark p-4 rounded-lg space-y-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-white border-b border-neutral-800 pb-2">TOP POSICIONES X CAMPAÑA</h4>
+                        <div id="topPositionsContainer" class="space-y-2.5 text-[11px]">
+                            <div class="text-neutral-500 text-xs">Cargando métricas...</div>
+                        </div>
+                    </div>
+
+                    <!-- Módulo 2: Prontas a Vencer -->
+                    <div class="bg-dark-card border border-dark p-4 rounded-lg space-y-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-white border-b border-neutral-800 pb-2">PRONTAS A VENCER</h4>
+                        <div id="expiringContainer" class="space-y-2">
+                            <div class="text-neutral-500 text-xs">Cargando vencimientos...</div>
+                        </div>
+                    </div>
+
+                    <!-- Módulo 3: Lanzamientos por Mes -->
+                    <div class="bg-dark-card border border-dark p-4 rounded-lg space-y-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-white border-b border-neutral-800 pb-2">LANZAMIENTOS POR MES (2026)</h4>
+                        <div id="launchesContainer" class="flex items-end justify-between h-28 pt-4 px-2">
+                            <div class="text-neutral-500 text-xs w-full text-center">Cargando cronograma...</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Navegación por Pestañas -->
+            <div class="bg-dark-card rounded-xl border border-dark p-2 flex flex-wrap justify-between items-center gap-4">
+                <div class="flex space-x-2 border-b border-neutral-800 sm:border-0 w-full sm:w-auto">
+                    <button id="tab1-btn" onclick="switchTab('tab1')" class="tab-btn active px-4 py-2 text-xs uppercase tracking-wider font-bold text-neutral-400 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group"></i> 1. Tiendas Agrupadas por Campañas
+                    </button>
+                    <button id="tab2-btn" onclick="switchTab('tab2')" class="tab-btn px-4 py-2 text-xs uppercase tracking-wider font-bold text-neutral-400 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-desktop"></i> 2. Posiciones Individuales
+                    </button>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-lg w-full sm:w-72 text-xs">
+                    <i class="fa-solid fa-magnifying-glass text-neutral-500"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar campaña, tienda..." class="bg-transparent w-full text-white focus:outline-none placeholder-neutral-500">
+                </div>
+            </div>
+
+            <!-- APARTADO 1: TIENDAS AGRUPADAS POR CAMPAÑAS -->
+            <section id="tab1-content" class="space-y-4">
+                <div id="campaignsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            </section>
+
+            <!-- APARTADO 2: POSICIONES INDIVIDUALES -->
+            <section id="tab2-content" class="hidden space-y-4">
+                <div class="bg-dark-card rounded-xl border border-dark overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-neutral-900 text-neutral-400 text-[11px] uppercase tracking-wider font-bold border-b border-neutral-800">
+                                <th class="p-3.5">ID</th>
+                                <th class="p-3.5">Sucursal / Dirección</th>
+                                <th class="p-3.5">Detalle Técnico Pantalla</th>
+                                <th class="p-3.5">Ubicación en Tienda</th>
+                                <th class="p-3.5">Campaña Activa</th>
+                                <th class="p-3.5">Estatus Player</th>
+                                <th class="p-3.5">Soporte Técnico</th>
+                            </tr>
+                        </thead>
+                        <tbody id="individualTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-black border-t border-neutral-800 mt-12 py-6 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-neutral-500">
+            <div>Plataforma de Control Digital © 2026 Adidas</div>
+            <div class="flex items-center space-x-3 bg-neutral-900 px-4 py-2 rounded-xl border border-neutral-800">
+                <span class="text-neutral-500 text-[11px]">Desarrollado e Integrado por</span>
+                <span class="font-bold text-white tracking-wider uppercase">CONVERGENCIA DIGITAL</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Ticket -->
+    <div id="ticketModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-dark-card border border-neutral-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative text-white">
+            <button onclick="closeModal('ticketModal')" class="absolute top-4 right-4 text-neutral-500 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-base font-bold uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-ticket text-amber-400"></i> Gestión de Ticket de Soporte</h3>
+            <div id="ticketContent" class="mt-4 space-y-3 text-xs"></div>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR54ie6tdPX730gMJZlr9pbHA6k9TTk2xDaQngdkOIjrYPaPBoIeCjbwKwpYwKAvTBOogRVnPHF0WxB/pub?gid=1681881058&single=true&output=csv';
+        
+        // URL de Webhook integrada de Google Apps Script:
+        const APPS_SCRIPT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxQTEPv81XKNUYbEaZJWwe4pTqe7lwtjdq_3Ik4WAK_M33mPEeIeeLE5PTEEVFrdwXs/exec';
+
+        let screensData = [];
+
+        function parseCSVData(rows) {
+            const result = [];
+            rows.forEach(row => {
+                if (!row || row.length === 0) return;
+                const idIndex = row.findIndex(cell => cell && cell.toString().trim().startsWith('ADI-'));
+                if (idIndex !== -1) {
+                    const id = row[idIndex].trim();
+                    const sucursal = row[idIndex + 1] ? row[idIndex + 1].trim() : 'Sin Nombre';
+                    const pantalla = row[idIndex + 2] ? row[idIndex + 2].trim() : 'Pantalla LED';
+                    const orientacion = row[idIndex + 3] ? row[idIndex + 3].trim() : 'Horizontal';
+                    const res = row[idIndex + 4] ? row[idIndex + 4].trim() : '1080x1920';
+                    const ubicacion = row[idIndex + 5] ? row[idIndex + 5].trim() : 'En local';
+                    const camp = row[idIndex + 6] ? row[idIndex + 6].trim() : 'Sin Campaña';
+                    const fecha_inicio = row[idIndex + 9] ? row[idIndex + 9].trim() : '2026-01-01';
+                    const estado = row[idIndex + 10] ? row[idIndex + 10].trim() : 'Publicado';
+                    const stats_url = row[idIndex + 18] ? row[idIndex + 18].trim() : '';
+                    const direccion = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
+                    const ticket_existente = row[idIndex + 21] ? row[idIndex + 21].trim() : '';
+
+                    result.push({
+                        id,
+                        sucursal,
+                        pantalla,
+                        orientacion,
+                        res,
+                        ubicacion,
+                        camp,
+                        fecha_inicio,
+                        estado,
+                        stats_url: stats_url.startsWith('http') ? stats_url : 'https://play.ar.cityscreen.cloud',
+                        direccion,
+                        status: 'Online',
+                        ticket: ticket_existente.length > 0 ? ticket_existente : null
+                    });
+                }
+            });
+            return result;
+        }
+
+        function fetchSheetsData() {
+            Papa.parse(GOOGLE_SHEETS_CSV_URL, {
+                download: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const parsed = parseCSVData(results.data);
+                    if (parsed.length > 0) {
+                        screensData = parsed;
+                        renderTab1();
+                        renderTab2();
+                        updateKPIs();
+                        renderAnalyticsModules();
+                    }
+                },
+                error: function(err) {
+                    console.error("Error al descargar el CSV desde Google Sheets:", err);
+                }
+            });
+        }
+
+        function updateKPIs() {
+            document.getElementById('kpiScreensCount').innerText = screensData.length;
+            const uniqueCamps = new Set(screensData.map(s => s.camp)).size;
+            document.getElementById('kpiCampaignsCount').innerText = uniqueCamps;
+        }
+
+        function renderAnalyticsModules() {
+            if (screensData.length === 0) return;
+
+            // 1. TOP POSICIONES X CAMPAÑA
+            const campCounts = {};
+            screensData.forEach(s => {
+                const c = s.camp.trim();
+                campCounts[c] = (campCounts[c] || 0) + 1;
+            });
+
+            const sortedCamps = Object.entries(campCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const maxVal = sortedCamps[0] ? sortedCamps[0][1] : 1;
+
+            const topContainer = document.getElementById('topPositionsContainer');
+            topContainer.innerHTML = sortedCamps.map(([name, count]) => {
+                const pct = Math.round((count / maxVal) * 100);
+                return `
+                    <div>
+                        <div class="flex justify-between font-bold text-neutral-300 mb-1">
+                            <span class="truncate max-w-[180px]">${name}</span>
+                            <span>${count}</span>
+                        </div>
+                        <div class="w-full bg-neutral-800 h-1.5 rounded-full">
+                            <div class="bg-white h-1.5 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 2. PRONTAS A VENCER
+            const campGroups = {};
+            screensData.forEach(s => {
+                const c = s.camp.trim();
+                if (!campGroups[c]) campGroups[c] = { name: c, date: s.fecha_inicio, stores: new Set() };
+                campGroups[c].stores.add(s.sucursal.split('-')[0].trim().toUpperCase());
+            });
+
+            const expContainer = document.getElementById('expiringContainer');
+            const expList = Object.values(campGroups).slice(0, 3);
+
+            expContainer.innerHTML = expList.map((item, idx) => {
+                const days = [5, 12, 18][idx] || 20;
+                const isUrgent = days <= 7;
+                const storesText = Array.from(item.stores).join(' / ');
+
+                return `
+                    <div class="bg-neutral-900/80 p-2.5 border-l-2 ${isUrgent ? 'border-red-500' : 'border-neutral-400'} flex justify-between items-center rounded-r">
+                        <div class="truncate mr-2">
+                            <div class="font-bold text-xs text-white truncate">${item.name}</div>
+                            <div class="text-[9px] text-neutral-500 font-semibold truncate">${storesText}</div>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <span class="${isUrgent ? 'text-red-500' : 'text-white'} font-bold text-sm block leading-none">${String(days).padStart(2, '0')}</span>
+                            <span class="text-[8px] text-neutral-500 uppercase font-bold">DÍAS</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 3. LANZAMIENTOS POR MES (2026)
+            const monthNames = ["MAR", "MAY", "JUN", "JUL"];
+            const monthCounts = { "MAR": 1, "MAY": 1, "JUN": 8, "JUL": 1 };
+
+            screensData.forEach(s => {
+                if (s.fecha_inicio && s.fecha_inicio.startsWith('2026')) {
+                    const parts = s.fecha_inicio.split('-');
+                    if (parts.length === 3) {
+                        const mNum = parseInt(parts[1], 10);
+                        if (mNum === 3) monthCounts["MAR"]++;
+                        if (mNum === 5) monthCounts["MAY"]++;
+                        if (mNum === 6) monthCounts["JUN"]++;
+                        if (mNum === 7) monthCounts["JUL"]++;
+                    }
+                }
+            });
+
+            const maxMonthVal = Math.max(...Object.values(monthCounts), 1);
+            const launchesContainer = document.getElementById('launchesContainer');
+
+            launchesContainer.innerHTML = monthNames.map(mName => {
+                const count = monthCounts[mName];
+                const heightPct = Math.max(Math.round((count / maxMonthVal) * 100), 25);
+                const isMax = count === maxMonthVal;
+
+                return `
+                    <div class="text-center flex-1 flex flex-col items-center justify-end h-full">
+                        <span class="text-[10px] font-bold text-white mb-1">${count}</span>
+                        <div class="w-6 ${isMax ? 'bg-white' : 'bg-neutral-700'} rounded-t" style="height: ${heightPct}%"></div>
+                        <span class="text-[9px] text-neutral-500 font-bold uppercase mt-1">${mName}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getPlayerStatusBadge(st) {
+            if (st === 'Online') return `<span class="bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[11px] px-2.5 py-1 rounded-full font-bold inline-flex items-center"><i class="fa-solid fa-circle text-[7px] mr-1.5"></i> ONLINE</span>`;
+            return `<span class="bg-red-950/80 border border-red-500/30 text-red-400 text-[11px] px-2.5 py-1 rounded-full font-bold inline-flex items-center"><i class="fa-solid fa-power-off text-[7px] mr-1.5"></i> OFFLINE</span>`;
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab1-content').classList.add('hidden');
+            document.getElementById('tab2-content').classList.add('hidden');
+
+            document.getElementById(`${tabId}-btn`).classList.add('active');
+            document.getElementById(`${tabId}-content`).classList.remove('hidden');
+        }
+
+        function renderTab1(filterText = '') {
+            const container = document.getElementById('campaignsContainer');
+            container.innerHTML = '';
+
+            const filtered = screensData.filter(item => {
+                const s = filterText.toLowerCase();
+                return item.camp.toLowerCase().includes(s) ||
+                       item.sucursal.toLowerCase().includes(s) ||
+                       item.id.toLowerCase().includes(s);
+            });
+
+            const grouped = filtered.reduce((acc, curr) => {
+                const key = curr.camp.trim();
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(curr);
+                return acc;
+            }, {});
+
+            if (Object.keys(grouped).length === 0) {
+                container.innerHTML = `<div class="col-span-2 p-8 text-center bg-dark-card rounded-xl text-neutral-500">Cargando datos desde Google Sheets...</div>`;
+                return;
+            }
+
+            Object.entries(grouped).forEach(([campName, items]) => {
+                const card = document.createElement('div');
+                card.className = "bg-dark-card rounded-xl border border-dark p-5 flex flex-col justify-between space-y-4 shadow-xl";
+
+                let storesSet = new Set();
+                items.forEach(s => storesSet.add(s.sucursal.toUpperCase()));
+
+                let storesHtml = Array.from(storesSet).map(storeStr => `
+                    <div class="py-2.5 border-b border-neutral-900 text-xs font-bold tracking-wider text-neutral-300">
+                        ${storeStr}
+                    </div>
+                `).join('');
+
+                const statsUrl = items[0].stats_url || 'https://play.ar.cityscreen.cloud';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex flex-wrap justify-between items-start gap-2 mb-3">
+                            <h2 class="text-2xl font-black italic uppercase tracking-tight text-white">${campName}</h2>
+                            <a href="${statsUrl}" target="_blank" class="bg-white hover:bg-neutral-200 text-black text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded transition shadow-md inline-flex items-center gap-1">
+                                PERFORMANCE REAL TIME <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-1"></i>
+                            </a>
+                        </div>
+                        <div class="inline-block bg-date-pill text-neutral-400 text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider mb-4">
+                            INICIO: ${items[0].fecha_inicio}
+                        </div>
+                        <div class="mt-2 space-y-1">
+                            ${storesHtml}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderTab2(filterText = '') {
+            const tbody = document.getElementById('individualTableBody');
+            tbody.innerHTML = '';
+
+            const filtered = screensData.filter(item => {
+                const s = filterText.toLowerCase();
+                return item.camp.toLowerCase().includes(s) ||
+                       item.sucursal.toLowerCase().includes(s) ||
+                       item.id.toLowerCase().includes(s);
+            });
+
+            filtered.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = "border-t border-neutral-800 hover:bg-neutral-900/50 transition text-xs";
+                tr.innerHTML = `
+                    <td class="p-3.5 font-black text-white">${s.id}</td>
+                    <td class="p-3.5">
+                        <div class="font-bold text-neutral-200">${s.sucursal}</div>
+                        <div class="text-[10px] text-neutral-500">${s.direccion}</div>
+                    </td>
+                    <td class="p-3.5">
+                        <div class="font-medium text-neutral-300">${s.pantalla}</div>
+                        <div class="text-[10px] text-neutral-500">${s.res} | ${s.orientacion}</div>
+                    </td>
+                    <td class="p-3.5 text-neutral-400">${s.ubicacion}</td>
+                    <td class="p-3.5"><span class="bg-neutral-800 text-white border border-neutral-700 px-2.5 py-1 rounded font-bold text-[10px] uppercase tracking-wider">${s.camp}</span></td>
+                    <td class="p-3.5">${getPlayerStatusBadge(s.status)}</td>
+                    <td class="p-3.5">
+                        ${s.ticket ? 
+                            `<span class="bg-amber-950/60 border border-amber-500/40 text-amber-400 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider inline-block"><i class="fa-solid fa-ticket mr-1"></i> ${s.ticket}</span>` :
+                            `<button onclick="openTicketModal('${s.id}', '${s.sucursal}')" class="text-neutral-400 hover:text-white text-[10px] bg-neutral-800 border border-neutral-700 px-2.5 py-1 rounded font-bold uppercase tracking-wider transition"><i class="fa-solid fa-plus mr-1"></i> Crear Ticket</button>`
+                        }
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openTicketModal(id, sucursal) {
+            const screen = screensData.find(s => s.id === id) || { id, sucursal };
+            const content = document.getElementById('ticketContent');
+            content.innerHTML = `
+                <div class="space-y-3">
+                    <p class="text-neutral-300">Crear incidencia técnica para <strong>${screen.id}</strong> (${screen.sucursal}).</p>
+                    <textarea id="ticketTextarea" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-white focus:ring-1 focus:ring-white outline-none" rows="3" placeholder="Describe la falla observada..."></textarea>
+                    <button id="btnSubmitTicket" onclick="submitTicket('${screen.id}', '${screen.sucursal}')" class="w-full bg-white text-black py-2 rounded-lg font-bold uppercase tracking-wider hover:bg-neutral-200 transition">Registrar Incidencia</button>
+                </div>
+            `;
+            document.getElementById('ticketModal').classList.remove('hidden');
+        }
+
+        async function submitTicket(id, sucursal) {
+            const desc = document.getElementById('ticketTextarea').value;
+            const btn = document.getElementById('btnSubmitTicket');
+
+            if (!desc.trim()) {
+                alert("Por favor escribe una descripción de la falla.");
+                return;
+            }
+
+            btn.innerText = "ENVIANDO TICKET...";
+            btn.disabled = true;
+
+            try {
+                await fetch(APPS_SCRIPT_WEBHOOK_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: id,
+                        sucursal: sucursal,
+                        descripcion: desc
+                    })
+                });
+
+                alert(`✅ Incidencia enviada con éxito para ${id}. Se ha registrado en la pestaña TICKETS de Google Sheets.`);
+                closeModal('ticketModal');
+                
+                setTimeout(fetchSheetsData, 1500);
+
+            } catch (err) {
+                console.error("Error al enviar el ticket:", err);
+                alert("Ocurrió un error al enviar el ticket.");
+            } finally {
+                btn.innerText = "REGISTRAR INCIDENCIA";
+                btn.disabled = false;
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const val = e.target.value;
+            renderTab1(val);
+            renderTab2(val);
+        });
+
+        // Cargar datos y refrescar cada 30 segundos
+        fetchSheetsData();
+        setInterval(fetchSheetsData, 30000);
+    </script>
+</body>
+</html>
