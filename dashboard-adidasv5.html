@@ -186,13 +186,13 @@
 
     <script>
         const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR54ie6tdPX730gMJZlr9pbHA6k9TTk2xDaQngdkOIjrYPaPBoIeCjbwKwpYwKAvTBOogRVnPHF0WxB/pub?gid=1681881058&single=true&output=csv';
-        const APPS_SCRIPT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxQTEPv81XKNUYbEaZJWwe4pTqe7lwtjdq_3Ik4WAK_M33mPEeIeeLE5PTEEVFrdwXs/exec';
+        const APPS_SCRIPT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxQTEPv81XKNUYbEaZJWwe4pTqe7lwtjdq_3Ink4WAK_M33mPEeIeeLE5PTEEVFrdwXs/exec';
 
-        // Mapeo estático de tickets de prueba para posiciones específicas si no están en el Excel
+        // Tickets estáticos de respaldo si no están cargados aún en el Excel
         const defaultTickets = {
-            'ADI-0001': '#TK-8801 - En Revisión',
-            'ADI-0009': '#TK-9012 - Temp Alta',
-            'ADI-0028': '#TK-9040 - Cambio LED'
+            'ADI-0001': { text: '#TK-8801 - En Revisión', url: 'https://freshdesk.com' },
+            'ADI-0009': { text: '#TK-9012 - Temp Alta', url: 'https://freshdesk.com' },
+            'ADI-0028': { text: '#TK-9040 - Cambio LED', url: 'https://freshdesk.com' }
         };
 
         let screensData = [];
@@ -215,10 +215,27 @@
                     const stats_url = row[idIndex + 18] ? row[idIndex + 18].trim() : '';
                     const direccion = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
                     
-                    // Buscar ticket en comentarios u observaciones
+                    // Lectura del Ticket y Link de Freshdesk cargado por el operador
                     const obsCol1 = row[idIndex + 16] ? row[idIndex + 16].trim() : '';
                     const obsCol2 = row[idIndex + 21] ? row[idIndex + 21].trim() : '';
-                    let ticket_existente = obsCol1.includes('TK-') ? obsCol1 : (obsCol2.includes('TK-') ? obsCol2 : defaultTickets[id] || null);
+                    
+                    let ticket_info = null;
+                    const combinedObs = obsCol1 + ' ' + obsCol2;
+                    
+                    if (combinedObs.includes('TK-') || combinedObs.includes('freshdesk')) {
+                        const freshdeskMatch = combinedObs.match(/https?:\/\/[^\s"]+/);
+                        const ticketTextMatch = combinedObs.match(/#?TK-\d+/);
+                        
+                        ticket_info = {
+                            text: ticketTextMatch ? ticketTextMatch[0] : 'VER TICKET',
+                            url: freshdeskMatch ? freshdeskMatch[0] : null
+                        };
+                    } else if (defaultTickets[id]) {
+                        ticket_info = defaultTickets[id];
+                    }
+
+                    // Estado controlado manualmente en Excel
+                    const isManualOffline = estado.toLowerCase().includes('off') || estado.toLowerCase().includes('paus') || estado.toLowerCase().includes('caid');
 
                     result.push({
                         id,
@@ -232,8 +249,8 @@
                         estado,
                         stats_url: stats_url.startsWith('http') ? stats_url : 'https://play.ar.cityscreen.cloud',
                         direccion,
-                        status: id === 'ADI-0001' ? 'Offline' : (id === 'ADI-0009' ? 'Advertencia' : 'Online'),
-                        ticket: ticket_existente
+                        status: isManualOffline ? 'Offline' : 'Online',
+                        ticket: ticket_info
                     });
                 }
             });
@@ -362,7 +379,6 @@
 
         function getPlayerStatusBadge(st) {
             if (st === 'Online') return `<span class="bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[11px] px-2.5 py-1 rounded-full font-bold inline-flex items-center"><i class="fa-solid fa-circle text-[7px] mr-1.5"></i> ONLINE</span>`;
-            if (st === 'Advertencia') return `<span class="bg-amber-950/80 border border-amber-500/30 text-amber-400 text-[11px] px-2.5 py-1 rounded-full font-bold inline-flex items-center"><i class="fa-solid fa-triangle-exclamation text-[7px] mr-1.5"></i> TEMP ALTA</span>`;
             return `<span class="bg-red-950/80 border border-red-500/30 text-red-400 text-[11px] px-2.5 py-1 rounded-full font-bold inline-flex items-center"><i class="fa-solid fa-power-off text-[7px] mr-1.5"></i> OFFLINE</span>`;
         }
 
@@ -447,6 +463,17 @@
             filtered.forEach(s => {
                 const tr = document.createElement('tr');
                 tr.className = "border-t border-neutral-800 hover:bg-neutral-900/50 transition text-xs";
+                
+                let ticketBtnHtml = `<button onclick="openTicketModal('${s.id}', '${s.sucursal}')" class="text-neutral-400 hover:text-white text-[10px] bg-neutral-800 border border-neutral-700 px-2.5 py-1 rounded font-bold uppercase tracking-wider transition"><i class="fa-solid fa-plus mr-1"></i> Crear Ticket</button>`;
+                
+                if (s.ticket) {
+                    if (s.ticket.url) {
+                        ticketBtnHtml = `<a href="${s.ticket.url}" target="_blank" class="bg-amber-950/60 border border-amber-500/40 text-amber-400 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-amber-900/80 transition inline-flex items-center gap-1"><i class="fa-solid fa-ticket"></i> ${s.ticket.text} <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i></a>`;
+                    } else {
+                        ticketBtnHtml = `<button onclick="viewExistingTicket('${s.id}', '${s.ticket.text}')" class="bg-amber-950/60 border border-amber-500/40 text-amber-400 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-amber-900/80 transition inline-flex items-center"><i class="fa-solid fa-ticket mr-1"></i> ${s.ticket.text}</button>`;
+                    }
+                }
+
                 tr.innerHTML = `
                     <td class="p-3.5 font-black text-white">${s.id}</td>
                     <td class="p-3.5">
@@ -460,12 +487,7 @@
                     <td class="p-3.5 text-neutral-400">${s.ubicacion}</td>
                     <td class="p-3.5"><span class="bg-neutral-800 text-white border border-neutral-700 px-2.5 py-1 rounded font-bold text-[10px] uppercase tracking-wider">${s.camp}</span></td>
                     <td class="p-3.5">${getPlayerStatusBadge(s.status)}</td>
-                    <td class="p-3.5">
-                        ${s.ticket ? 
-                            `<button onclick="viewExistingTicket('${s.id}', '${s.ticket}')" class="bg-amber-950/60 border border-amber-500/40 text-amber-400 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-amber-900/80 transition inline-flex items-center"><i class="fa-solid fa-ticket mr-1"></i> ${s.ticket}</button>` :
-                            `<button onclick="openTicketModal('${s.id}', '${s.sucursal}')" class="text-neutral-400 hover:text-white text-[10px] bg-neutral-800 border border-neutral-700 px-2.5 py-1 rounded font-bold uppercase tracking-wider transition"><i class="fa-solid fa-plus mr-1"></i> Crear Ticket</button>`
-                        }
-                    </td>
+                    <td class="p-3.5">${ticketBtnHtml}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -480,10 +502,10 @@
                         <i class="fa-solid fa-triangle-exclamation"></i> TICKET ABIERTO: ${ticketInfo}
                     </div>
                     <p class="text-neutral-300 text-[11px]">
-                        Esta posición <strong>${id}</strong> (${screen ? screen.sucursal : 'Tienda'}) tiene una incidencia técnica en proceso de resolución por el equipo de soporte.
+                        Esta posición <strong>${id}</strong> (${screen ? screen.sucursal : 'Tienda'}) tiene una incidencia técnica registrada en el planificador.
                     </p>
                     <div class="text-[10px] text-neutral-400 pt-2 border-t border-neutral-800 flex justify-between">
-                        <span>ESTADO: EN REVISIÓN</span>
+                        <span>ESTADO: EN REVISIÓN DE OPERADOR</span>
                         <span>SLA ESTIMADO: &lt; 4 HORAS</span>
                     </div>
                     <button onclick="closeModal('ticketModal')" class="w-full bg-white text-black py-2 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-neutral-200 transition mt-2">
@@ -521,6 +543,7 @@
             btn.disabled = true;
 
             try {
+                // Envía el formulario a Google Apps Script sin asignar ticket automáticamente
                 await fetch(APPS_SCRIPT_WEBHOOK_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -532,7 +555,7 @@
                     })
                 });
 
-                // Muestra la tarjeta de confirmación dentro del modal en modo oscuro (Opción 1)
+                // Leyenda de confirmación en la estética Adidas
                 content.innerHTML = `
                     <div class="bg-emerald-950/40 border border-emerald-500/40 p-4 rounded-xl space-y-3 text-center">
                         <div class="text-emerald-400 text-3xl">
@@ -541,9 +564,12 @@
                         <div class="font-black text-sm uppercase tracking-wider text-white">
                             INCIDENCIA REGISTRADA CON ÉXITO
                         </div>
-                        <p class="text-[11px] text-neutral-300">
-                            TICKET ASIGNADO A LA POSICIÓN <strong class="text-white">${id}</strong>. EL EQUIPO DE SOPORTE TÉCNICO HA SIDO NOTIFICADO EN TIEMPO REAL.
+                        <p class="text-[11px] text-neutral-300 leading-relaxed">
+                            REGISTRO CREADO PARA LA POSICIÓN <strong class="text-white">${id}</strong>. SE HA ENVIADO UN CORREO ELECTRÓNICO CON LOS DETALLES DEL TICKET Y SU ENLACE DE SEGUIMIENTO.
                         </p>
+                        <div class="text-[10px] text-neutral-400 pt-2 border-t border-neutral-800/80">
+                            UN OPERADOR ASIGNARÁ EL NÚMERO Y ENLACE FINAL EN EL PLANIFICADOR CENTRAL.
+                        </div>
                         <button onclick="closeModal('ticketModal')" class="w-full bg-white text-black py-2 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-neutral-200 transition mt-2">
                             ACEPTAR
                         </button>
@@ -554,7 +580,7 @@
 
             } catch (err) {
                 console.error("Error al enviar el ticket:", err);
-                alert("Ocurrió un error al enviar el ticket.");
+                alert("Ocurrió un error al enviar la incidencia.");
                 btn.innerText = "REGISTRAR INCIDENCIA";
                 btn.disabled = false;
             }
