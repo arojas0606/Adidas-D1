@@ -186,14 +186,7 @@
 
     <script>
         const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR54ie6tdPX730gMJZlr9pbHA6k9TTk2xDaQngdkOIjrYPaPBoIeCjbwKwpYwKAvTBOogRVnPHF0WxB/pub?gid=1681881058&single=true&output=csv';
-        const APPS_SCRIPT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxQTEPv81XKNUYbEaZJWwe4pTqe7lwtjdq_3Ink4WAK_M33mPEeIeeLE5PTEEVFrdwXs/exec';
-
-        // Tickets estáticos de respaldo si no están cargados aún en el Excel
-        const defaultTickets = {
-            'ADI-0001': { text: '#TK-8801 - En Revisión', url: 'https://freshdesk.com' },
-            'ADI-0009': { text: '#TK-9012 - Temp Alta', url: 'https://freshdesk.com' },
-            'ADI-0028': { text: '#TK-9040 - Cambio LED', url: 'https://freshdesk.com' }
-        };
+        const APPS_SCRIPT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxQTEPv81XKNUYbEaZJWwe4pTqe7lwtjdq_3Ik4WAK_M33mPEeIeeLE5PTEEVFrdwXs/exec';
 
         let screensData = [];
 
@@ -215,26 +208,27 @@
                     const stats_url = row[idIndex + 18] ? row[idIndex + 18].trim() : '';
                     const direccion = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
                     
-                    // Lectura del Ticket y Link de Freshdesk cargado por el operador
-                    const obsCol1 = row[idIndex + 16] ? row[idIndex + 16].trim() : '';
-                    const obsCol2 = row[idIndex + 21] ? row[idIndex + 21].trim() : '';
-                    
+                    // LECTURA DINÁMICA DE TICKET DESDE EXCEL
+                    // Revisa las columnas de observaciones (16 y 21+) buscando número o link
                     let ticket_info = null;
-                    const combinedObs = obsCol1 + ' ' + obsCol2;
-                    
-                    if (combinedObs.includes('TK-') || combinedObs.includes('freshdesk')) {
-                        const freshdeskMatch = combinedObs.match(/https?:\/\/[^\s"]+/);
-                        const ticketTextMatch = combinedObs.match(/#?TK-\d+/);
+                    const possibleObs = [
+                        row[idIndex + 16] ? row[idIndex + 16].trim() : '',
+                        row[idIndex + 21] ? row[idIndex + 21].trim() : '',
+                        row[idIndex + 22] ? row[idIndex + 22].trim() : '',
+                        row[idIndex + 23] ? row[idIndex + 23].trim() : ''
+                    ].join(' ');
+
+                    if (possibleObs.trim().length > 0 && (possibleObs.includes('TK-') || possibleObs.includes('http') || possibleObs.includes('freshdesk'))) {
+                        const urlMatch = possibleObs.match(/https?:\/\/[^\s"]+/);
+                        const ticketMatch = possibleObs.match(/#?TK-[\w\d]+/i) || possibleObs.match(/TK-[\w\d]+/i);
                         
                         ticket_info = {
-                            text: ticketTextMatch ? ticketTextMatch[0] : 'VER TICKET',
-                            url: freshdeskMatch ? freshdeskMatch[0] : null
+                            text: ticketMatch ? (ticketMatch[0].startsWith('#') ? ticketMatch[0] : '#' + ticketMatch[0]) : 'VER TICKET',
+                            url: urlMatch ? urlMatch[0] : null
                         };
-                    } else if (defaultTickets[id]) {
-                        ticket_info = defaultTickets[id];
                     }
 
-                    // Estado controlado manualmente en Excel
+                    // Estado controlado manualmente por Excel
                     const isManualOffline = estado.toLowerCase().includes('off') || estado.toLowerCase().includes('paus') || estado.toLowerCase().includes('caid');
 
                     result.push({
@@ -543,7 +537,6 @@
             btn.disabled = true;
 
             try {
-                // Envía el formulario a Google Apps Script sin asignar ticket automáticamente
                 await fetch(APPS_SCRIPT_WEBHOOK_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -555,7 +548,6 @@
                     })
                 });
 
-                // Leyenda de confirmación en la estética Adidas
                 content.innerHTML = `
                     <div class="bg-emerald-950/40 border border-emerald-500/40 p-4 rounded-xl space-y-3 text-center">
                         <div class="text-emerald-400 text-3xl">
