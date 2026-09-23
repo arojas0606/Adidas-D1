@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adidas - Digital Display Manager 2026 (v5.1)</title>
+    <title>Adidas - Digital Display Manager 2026 (v6)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -46,156 +46,206 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between bg-white text-gray-900 dark:bg-black dark:text-white">
 
-    <div>
-        <!-- Header Principal Navbar -->
-        <header class="bg-white dark:bg-black border-b border-gray-200 dark:border-neutral-800 px-6 py-4 sticky top-0 z-40 shadow-sm transition-colors">
-            <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
-                <div class="flex items-center space-x-4">
-                    <i class="fa-brands fa-adidas text-4xl text-black dark:text-white"></i>
-                    <div class="h-8 w-px bg-gray-200 dark:bg-neutral-800"></div>
-                    <div>
-                        <h1 class="text-lg font-black tracking-wider uppercase text-black dark:text-white">DIGITAL DISPLAY MANAGER 2026</h1>
-                        <p class="text-[11px] text-gray-500 dark:text-neutral-400">Control de campañas y pantallas</p>
-                    </div>
-                </div>
-
-                <!-- Botones de Control & Sincronización -->
-                <div class="flex items-center space-x-3">
-                    <div class="text-right hidden sm:block mr-2">
-                        <span class="text-[9px] text-gray-400 dark:text-neutral-500 block uppercase tracking-widest">Powered by</span>
-                        <span class="text-xs font-bold text-gray-700 dark:text-neutral-300">Convergencia Digital</span>
-                    </div>
-
-                    <!-- Botón Alternar Tema Dark/Light -->
-                    <button id="themeToggleBtn" onclick="toggleTheme()" class="bg-gray-100 dark:bg-neutral-900 hover:bg-gray-200 dark:hover:bg-neutral-800 text-gray-800 dark:text-neutral-200 border border-gray-300 dark:border-neutral-800 text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition">
-                        <i id="themeIcon" class="fa-solid fa-moon text-amber-400"></i>
-                        <span id="themeText">Dark</span>
-                    </button>
-
-                    <!-- Botón de Sincronización Manual -->
-                    <button id="btnManualSync" onclick="manualSync()" class="bg-gray-100 dark:bg-neutral-900 hover:bg-gray-200 dark:hover:bg-neutral-800 text-gray-800 dark:text-neutral-200 border border-gray-300 dark:border-neutral-800 text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition">
-                        <i id="syncIcon" class="fa-solid fa-rotate text-xs"></i> <span>Sincronizar</span>
-                    </button>
-
-                    <span id="syncStatus" class="bg-emerald-50 dark:bg-emerald-600/20 border border-emerald-300 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 text-xs px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5">
-                        <span class="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-ping"></span> Tiempo real
-                    </span>
-                </div>
-            </div>
-        </header>
-
-        <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
-
-            <!-- SECTOR: ESTADO DE RED & CAMPAÑAS ACTIVAS -->
-            <div class="space-y-4">
-                <div class="flex flex-wrap justify-between items-end border-b border-gray-200 dark:border-neutral-800 pb-3 gap-2">
-                    <div>
-                        <span class="text-[10px] text-gray-400 dark:text-neutral-500 font-bold tracking-widest uppercase block">ESTADO DE RED</span>
-                        <h2 class="text-3xl md:text-4xl adidas-font-title text-black dark:text-white">CAMPAÑAS ACTIVAS</h2>
-                    </div>
-                </div>
-
-                <!-- Banner Resumen Global -->
-                <div class="bg-black text-white dark:bg-white dark:text-black p-6 rounded-none flex flex-wrap justify-between items-center shadow-xl gap-4 transition-colors">
-                    <div>
-                        <h3 class="text-2xl md:text-3xl adidas-font-title leading-tight">RESUMEN<br>GLOBAL</h3>
-                    </div>
-                    <div class="flex items-center space-x-8 sm:space-x-12 text-right">
-                        <div>
-                            <span id="kpiCampaignsCount" class="text-4xl sm:text-5xl font-black block leading-none">0</span>
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-neutral-600">CAMPAÑAS</span>
-                        </div>
-                        <div>
-                            <span id="kpiScreensCount" class="text-4xl sm:text-5xl font-black block leading-none">0</span>
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-neutral-600">POSICIONES</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Fila de 3 Módulos Analíticos Dinámicos -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    
-                    <!-- Módulo 1: Top Posiciones x Campaña -->
-                    <div class="bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-[#1F1F1F] p-4 rounded-lg space-y-3 shadow-sm transition-colors">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-black dark:text-white border-b border-gray-200 dark:border-neutral-800 pb-2">TOP POSICIONES X CAMPAÑA</h4>
-                        <div id="topPositionsContainer" class="space-y-2.5 text-[11px]">
-                            <div class="text-gray-400 dark:text-neutral-500 text-xs">Cargando métricas...</div>
-                        </div>
-                    </div>
-
-                    <!-- Módulo 2: Prontas a Vencer -->
-                    <div class="bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-[#1F1F1F] p-4 rounded-lg space-y-3 shadow-sm transition-colors">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-black dark:text-white border-b border-gray-200 dark:border-neutral-800 pb-2">PRONTAS A VENCER</h4>
-                        <div id="expiringContainer" class="space-y-2">
-                            <div class="text-gray-400 dark:text-neutral-500 text-xs">Cargando vencimientos...</div>
-                        </div>
-                    </div>
-
-                    <!-- Módulo 3: Lanzamientos de Campañas por Posición -->
-                    <div class="bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-[#1F1F1F] p-4 rounded-lg space-y-3 shadow-sm transition-colors">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-black dark:text-white border-b border-gray-200 dark:border-neutral-800 pb-2">LANZAMIENTOS DE CAMPAÑAS POR POSICIÓN</h4>
-                        <div id="launchesContainer" class="flex items-end justify-between h-28 pt-4 px-2">
-                            <div class="text-gray-400 dark:text-neutral-500 text-xs w-full text-center">Cargando cronograma...</div>
-                        </div>
-                    </div>
-
-                </div>
+    <!-- PANTALLA DE LOGIN PREVIO -->
+    <div id="loginOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 dark:bg-black p-4 transition-colors">
+        <div class="w-full max-w-md bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-neutral-800 rounded-2xl p-8 shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <i class="fa-brands fa-adidas text-5xl text-black dark:text-white"></i>
+                <h2 class="text-xl font-black tracking-wider uppercase text-black dark:text-white mt-2">DIGITAL DISPLAY MANAGER</h2>
+                <p class="text-xs text-gray-500 dark:text-neutral-400">Ingresa tus credenciales para acceder a la plataforma</p>
             </div>
 
-            <!-- Navegación por Pestañas -->
-            <div class="bg-white dark:bg-[#0D0D0D] rounded-xl border border-gray-200 dark:border-[#1F1F1F] p-2 flex flex-wrap justify-between items-center gap-4 shadow-sm transition-colors">
-                <div class="flex space-x-2 border-b border-gray-200 dark:border-neutral-800 sm:border-0 w-full sm:w-auto">
-                    <button id="tab1-btn" onclick="switchTab('tab1')" class="tab-btn active px-4 py-2 text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition flex items-center gap-2">
-                        <i class="fa-solid fa-layer-group"></i> 1. Tiendas Agrupadas por Campañas
-                    </button>
-                    <button id="tab2-btn" onclick="switchTab('tab2')" class="tab-btn px-4 py-2 text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition flex items-center gap-2">
-                        <i class="fa-solid fa-desktop"></i> 2. Posiciones Individuales
-                    </button>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-neutral-400 mb-1">Usuario</label>
+                    <div class="flex items-center bg-gray-50 dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs">
+                        <i class="fa-solid fa-user text-gray-400 dark:text-neutral-500 mr-2"></i>
+                        <input type="text" id="loginUsername" placeholder="Usuario" required autocomplete="username" class="bg-transparent w-full text-black dark:text-white focus:outline-none">
+                    </div>
                 </div>
-                <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg w-full sm:w-72 text-xs">
-                    <i class="fa-solid fa-magnifying-glass text-gray-400 dark:text-neutral-500"></i>
-                    <input type="text" id="searchInput" placeholder="Buscar campaña, tienda..." class="bg-transparent w-full text-black dark:text-white focus:outline-none placeholder-gray-400 dark:placeholder-neutral-500">
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-neutral-400 mb-1">Contraseña</label>
+                    <div class="flex items-center bg-gray-50 dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs">
+                        <i class="fa-solid fa-lock text-gray-400 dark:text-neutral-500 mr-2"></i>
+                        <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password" class="bg-transparent w-full text-black dark:text-white focus:outline-none">
+                    </div>
                 </div>
-            </div>
 
-            <!-- APARTADO 1: TIENDAS AGRUPADAS POR CAMPAÑAS -->
-            <section id="tab1-content" class="space-y-4">
-                <div id="campaignsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-            </section>
-
-            <!-- APARTADO 2: POSICIONES INDIVIDUALES -->
-            <section id="tab2-content" class="hidden space-y-4">
-                <div class="bg-white dark:bg-[#0D0D0D] rounded-xl border border-gray-200 dark:border-[#1F1F1F] overflow-x-auto shadow-sm transition-colors">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-100 dark:bg-neutral-900 text-gray-700 dark:text-neutral-400 text-[11px] uppercase tracking-wider font-bold border-b border-gray-200 dark:border-neutral-800">
-                                <th class="p-3.5 whitespace-nowrap">ID</th>
-                                <th class="p-3.5">Sucursal / Dirección</th>
-                                <th class="p-3.5">Detalle Técnico Pantalla</th>
-                                <th class="p-3.5">Ubicación en Tienda</th>
-                                <th class="p-3.5">Campaña Activa</th>
-                                <th class="p-3.5">Estatus Player</th>
-                                <th class="p-3.5">Soporte Técnico</th>
-                            </tr>
-                        </thead>
-                        <tbody id="individualTableBody"></tbody>
-                    </table>
+                <div id="loginError" class="hidden text-red-500 text-[11px] font-bold text-center bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 py-2 rounded-lg">
+                    Usuario o contraseña incorrectos
                 </div>
-            </section>
 
-        </main>
-    </div>
+                <button type="submit" id="loginBtn" class="w-full bg-black text-white dark:bg-white dark:text-black py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-gray-800 dark:hover:bg-neutral-200 transition shadow-md">
+                    Iniciar Sesión
+                </button>
+            </form>
 
-    <!-- Footer -->
-    <footer class="bg-white dark:bg-black border-t border-gray-200 dark:border-neutral-800 mt-12 py-6 px-6 shadow-inner transition-colors">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-500 dark:text-neutral-500">
-            <div>Plataforma de Control Digital © 2026 Adidas</div>
-            <div class="flex items-center space-x-3 bg-gray-100 dark:bg-neutral-900 px-4 py-2 rounded-xl border border-gray-200 dark:border-neutral-800">
-                <span class="text-gray-500 dark:text-neutral-500 text-[11px]">Desarrollado e Integrado por</span>
-                <span class="font-bold text-black dark:text-white tracking-wider uppercase">CONVERGENCIA DIGITAL</span>
+            <div class="text-center pt-2 border-t border-gray-100 dark:border-neutral-900">
+                <span class="text-[9px] text-gray-400 dark:text-neutral-500 uppercase tracking-widest block">Powered by</span>
+                <span class="text-xs font-bold text-gray-700 dark:text-neutral-300">Convergencia Digital</span>
             </div>
         </div>
-    </footer>
+    </div>
+
+    <!-- CONTENIDO DEL DASHBOARD -->
+    <div id="dashboardApp" class="hidden flex-col justify-between min-h-screen">
+        <div>
+            <!-- Header Principal Navbar -->
+            <header class="bg-white dark:bg-black border-b border-gray-200 dark:border-neutral-800 px-6 py-4 sticky top-0 z-40 shadow-sm transition-colors">
+                <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+                    <div class="flex items-center space-x-4">
+                        <i class="fa-brands fa-adidas text-4xl text-black dark:text-white"></i>
+                        <div class="h-8 w-px bg-gray-200 dark:bg-neutral-800"></div>
+                        <div>
+                            <h1 class="text-lg font-black tracking-wider uppercase text-black dark:text-white">DIGITAL DISPLAY MANAGER 2026</h1>
+                            <p class="text-[11px] text-gray-500 dark:text-neutral-400">Control de campañas y pantallas</p>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Control & Sincronización -->
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right hidden sm:block mr-2">
+                            <span class="text-[9px] text-gray-400 dark:text-neutral-500 block uppercase tracking-widest">Powered by</span>
+                            <span class="text-xs font-bold text-gray-700 dark:text-neutral-300">Convergencia Digital</span>
+                        </div>
+
+                        <!-- Botón Alternar Tema Dark/Light -->
+                        <button id="themeToggleBtn" onclick="toggleTheme()" class="bg-gray-100 dark:bg-neutral-900 hover:bg-gray-200 dark:hover:bg-neutral-800 text-gray-800 dark:text-neutral-200 border border-gray-300 dark:border-neutral-800 text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition">
+                            <i id="themeIcon" class="fa-solid fa-moon text-amber-400"></i>
+                            <span id="themeText">Dark</span>
+                        </button>
+
+                        <!-- Botón de Sincronización Manual -->
+                        <button id="btnManualSync" onclick="manualSync()" class="bg-gray-100 dark:bg-neutral-900 hover:bg-gray-200 dark:hover:bg-neutral-800 text-gray-800 dark:text-neutral-200 border border-gray-300 dark:border-neutral-800 text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition">
+                            <i id="syncIcon" class="fa-solid fa-rotate text-xs"></i> <span>Sincronizar</span>
+                        </button>
+
+                        <span id="syncStatus" class="bg-emerald-50 dark:bg-emerald-600/20 border border-emerald-300 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 text-xs px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5">
+                            <span class="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-ping"></span> Tiempo real
+                        </span>
+
+                        <!-- Botón Cerrar Sesión -->
+                        <button onclick="logout()" title="Cerrar sesión" class="bg-gray-100 dark:bg-neutral-900 hover:bg-red-50 dark:hover:bg-red-950/40 text-gray-700 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 border border-gray-300 dark:border-neutral-800 text-xs px-3 py-1.5 rounded-full font-bold transition ml-2">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
+
+                <!-- SECTOR: ESTADO DE RED & CAMPAÑAS ACTIVAS -->
+                <div class="space-y-4">
+                    <div class="flex flex-wrap justify-between items-end border-b border-gray-200 dark:border-neutral-800 pb-3 gap-2">
+                        <div>
+                            <span class="text-[10px] text-gray-400 dark:text-neutral-500 font-bold tracking-widest uppercase block">ESTADO DE RED</span>
+                            <h2 class="text-3xl md:text-4xl adidas-font-title text-black dark:text-white">CAMPAÑAS ACTIVAS</h2>
+                        </div>
+                    </div>
+
+                    <!-- Banner Resumen Global -->
+                    <div class="bg-black text-white dark:bg-white dark:text-black p-6 rounded-none flex flex-wrap justify-between items-center shadow-xl gap-4 transition-colors">
+                        <div>
+                            <h3 class="text-2xl md:text-3xl adidas-font-title leading-tight">RESUMEN<br>GLOBAL</h3>
+                        </div>
+                        <div class="flex items-center space-x-8 sm:space-x-12 text-right">
+                            <div>
+                                <span id="kpiCampaignsCount" class="text-4xl sm:text-5xl font-black block leading-none">0</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-neutral-600">CAMPAÑAS</span>
+                            </div>
+                            <div>
+                                <span id="kpiScreensCount" class="text-4xl sm:text-5xl font-black block leading-none">0</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-neutral-600">POSICIONES</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fila de 3 Módulos Analíticos Dinámicos -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        
+                        <!-- Módulo 1: Top Posiciones x Campaña -->
+                        <div class="bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-[#1F1F1F] p-4 rounded-lg space-y-3 shadow-sm transition-colors">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-black dark:text-white border-b border-gray-200 dark:border-neutral-800 pb-2">TOP POSICIONES X CAMPAÑA</h4>
+                            <div id="topPositionsContainer" class="space-y-2.5 text-[11px]">
+                                <div class="text-gray-400 dark:text-neutral-500 text-xs">Cargando métricas...</div>
+                            </div>
+                        </div>
+
+                        <!-- Módulo 2: Prontas a Vencer -->
+                        <div class="bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-[#1F1F1F] p-4 rounded-lg space-y-3 shadow-sm transition-colors">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-black dark:text-white border-b border-gray-200 dark:border-neutral-800 pb-2">PRONTAS A VENCER</h4>
+                            <div id="expiringContainer" class="space-y-2">
+                                <div class="text-gray-400 dark:text-neutral-500 text-xs">Cargando vencimientos...</div>
+                            </div>
+                        </div>
+
+                        <!-- Módulo 3: Lanzamientos de Campañas por Posición -->
+                        <div class="bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-[#1F1F1F] p-4 rounded-lg space-y-3 shadow-sm transition-colors">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-black dark:text-white border-b border-gray-200 dark:border-neutral-800 pb-2">LANZAMIENTOS DE CAMPAÑAS POR POSICIÓN</h4>
+                            <div id="launchesContainer" class="flex items-end justify-between h-28 pt-4 px-2">
+                                <div class="text-gray-400 dark:text-neutral-500 text-xs w-full text-center">Cargando cronograma...</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Navegación por Pestañas -->
+                <div class="bg-white dark:bg-[#0D0D0D] rounded-xl border border-gray-200 dark:border-[#1F1F1F] p-2 flex flex-wrap justify-between items-center gap-4 shadow-sm transition-colors">
+                    <div class="flex space-x-2 border-b border-gray-200 dark:border-neutral-800 sm:border-0 w-full sm:w-auto">
+                        <button id="tab1-btn" onclick="switchTab('tab1')" class="tab-btn active px-4 py-2 text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group"></i> 1. Tiendas Agrupadas por Campañas
+                        </button>
+                        <button id="tab2-btn" onclick="switchTab('tab2')" class="tab-btn px-4 py-2 text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition flex items-center gap-2">
+                            <i class="fa-solid fa-desktop"></i> 2. Posiciones Individuales
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg w-full sm:w-72 text-xs">
+                        <i class="fa-solid fa-magnifying-glass text-gray-400 dark:text-neutral-500"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar campaña, tienda..." class="bg-transparent w-full text-black dark:text-white focus:outline-none placeholder-gray-400 dark:placeholder-neutral-500">
+                    </div>
+                </div>
+
+                <!-- APARTADO 1: TIENDAS AGRUPADAS POR CAMPAÑAS -->
+                <section id="tab1-content" class="space-y-4">
+                    <div id="campaignsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                </section>
+
+                <!-- APARTADO 2: POSICIONES INDIVIDUALES -->
+                <section id="tab2-content" class="hidden space-y-4">
+                    <div class="bg-white dark:bg-[#0D0D0D] rounded-xl border border-gray-200 dark:border-[#1F1F1F] overflow-x-auto shadow-sm transition-colors">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 dark:bg-neutral-900 text-gray-700 dark:text-neutral-400 text-[11px] uppercase tracking-wider font-bold border-b border-gray-200 dark:border-neutral-800">
+                                    <th class="p-3.5 whitespace-nowrap">ID</th>
+                                    <th class="p-3.5">Sucursal / Dirección</th>
+                                    <th class="p-3.5">Detalle Técnico Pantalla</th>
+                                    <th class="p-3.5">Ubicación en Tienda</th>
+                                    <th class="p-3.5">Campaña Activa</th>
+                                    <th class="p-3.5">Estatus Player</th>
+                                    <th class="p-3.5">Soporte Técnico</th>
+                                </tr>
+                            </thead>
+                            <tbody id="individualTableBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-white dark:bg-black border-t border-gray-200 dark:border-neutral-800 mt-12 py-6 px-6 shadow-inner transition-colors">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-500 dark:text-neutral-500">
+                <div>Plataforma de Control Digital © 2026 Adidas</div>
+                <div class="flex items-center space-x-3 bg-gray-100 dark:bg-neutral-900 px-4 py-2 rounded-xl border border-gray-200 dark:border-neutral-800">
+                    <span class="text-gray-500 dark:text-neutral-500 text-[11px]">Desarrollado e Integrado por</span>
+                    <span class="font-bold text-black dark:text-white tracking-wider uppercase">CONVERGENCIA DIGITAL</span>
+                </div>
+            </div>
+        </footer>
+    </div>
 
     <!-- Modal Ticket -->
     <div id="ticketModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
@@ -210,7 +260,63 @@
         const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR54ie6tdPX730gMJZlr9pbHA6k9TTk2xDaQngdkOIjrYPaPBoIeCjbwKwpYwKAvTBOogRVnPHF0WxB/pub?gid=1681881058&single=true&output=csv';
         const APPS_SCRIPT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxQTEPv81XKNUYbEaZJWwe4pTqe7lwtjdq_3Ink4WAK_M33mPEeIeeLE5PTEEVFrdwXs/exec';
 
+        // HASHES SHA-256 SEGUROS ENCRIPTADOS DE LAS CREDENCIALES
+        // Usuario: "adidas"
+        const USER_HASH = 'cd8d9f10f13511eb9eefaa5763b65a5879a8309df5ffb6c7b9bc99c5cbeebaa4';
+        // Contraseña: "WS3281546023"
+        const PASS_HASH = 'ca4cb79fa3b6aa3d3ff6ec2cb6dce0430b80540d5ebffed65be9f7e59bc6edbf';
+
         let screensData = [];
+
+        // Función matemática para calcular el Hash SHA-256 en el navegador
+        async function sha256(str) {
+            const buffer = new TextEncoder().encode(str);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Manejador del Login con encriptación previa
+        async function handleLogin(e) {
+            e.preventDefault();
+            const inputUser = document.getElementById('loginUsername').value.trim();
+            const inputPass = document.getElementById('loginPassword').value.trim();
+            const errorDiv = document.getElementById('loginError');
+
+            const inputUserHash = await sha256(inputUser);
+            const inputPassHash = await sha256(inputPass);
+
+            if (inputUserHash === USER_HASH && inputPassHash === PASS_HASH) {
+                sessionStorage.setItem('adidas_session', 'authenticated');
+                errorDiv.classList.add('hidden');
+                showDashboard();
+            } else {
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function checkAuth() {
+            if (sessionStorage.getItem('adidas_session') === 'authenticated') {
+                showDashboard();
+            } else {
+                document.getElementById('loginOverlay').classList.remove('hidden');
+                document.getElementById('dashboardApp').classList.add('hidden');
+                document.getElementById('dashboardApp').classList.remove('flex');
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            const dash = document.getElementById('dashboardApp');
+            dash.classList.remove('hidden');
+            dash.classList.add('flex');
+            fetchSheetsData();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('adidas_session');
+            location.reload();
+        }
 
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
@@ -274,14 +380,10 @@
                         fecha_caducidad = row[caducidadColIndex].trim();
                     }
 
-                    // Columna T (idIndex + 19): Estadísticas CityScreen
                     const rawStatsUrl = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
                     const stats_url = rawStatsUrl.startsWith('http') ? rawStatsUrl : 'https://play.ar.cityscreen.cloud';
-                    
-                    // Columna U (idIndex + 20): Dirección física
                     const direccion = row[idIndex + 20] ? row[idIndex + 20].trim() : '';
 
-                    // AISLAMIENTO RIGUROSO DE TICKETS: Únicamente analiza Observaciones técnicas (idIndex+22) y Número de Ticket (idIndex+23)
                     let ticket_info = null;
                     const ticketCol = row[idIndex + 23] ? row[idIndex + 23].trim() : '';
                     const obsTechCol = row[idIndex + 22] ? row[idIndex + 22].trim() : '';
@@ -289,12 +391,10 @@
                     const combinedTicketStr = `${ticketCol} ${obsTechCol}`.trim();
 
                     if (combinedTicketStr.length > 0) {
-                        // Buscar si existe enlace directo a Freshdesk
                         const freshdeskUrlMatch = combinedTicketStr.match(/https?:\/\/[^\s"]*freshdesk[^\s"]*/i);
                         const genericUrlMatch = combinedTicketStr.match(/https?:\/\/[^\s"]+/i);
                         const ticketCodeMatch = combinedTicketStr.match(/#?TK-[\w\d]+/i) || combinedTicketStr.match(/TK-[\w\d]+/i);
 
-                        // Si existe un código o una URL que NO sea de Google Drive
                         const validUrl = freshdeskUrlMatch ? freshdeskUrlMatch[0] : (genericUrlMatch && !genericUrlMatch[0].includes('drive.google.com') ? genericUrlMatch[0] : null);
 
                         if (ticketCodeMatch || validUrl) {
@@ -775,12 +875,16 @@
             renderTab2(val);
         });
 
-        // Inicializar tema guardado o por defecto
+        // Inicializar Tema y Autenticación al cargar la página
         initTheme();
+        checkAuth();
 
-        // Cargar datos y refrescar cada 30 segundos
-        fetchSheetsData();
-        setInterval(fetchSheetsData, 30000);
+        // Refresco de datos cada 30 segundos
+        setInterval(() => {
+            if (sessionStorage.getItem('adidas_session') === 'authenticated') {
+                fetchSheetsData();
+            }
+        }, 30000);
     </script>
 </body>
 </html>
