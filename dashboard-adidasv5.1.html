@@ -105,7 +105,7 @@
                         </div>
                     </div>
 
-                    <!-- Módulo 2: Prontas a Vencer -->
+                    <!-- Módulo 2: Prontas a Vencer (Basado en la Columna Caducidad) -->
                     <div class="bg-light-card border border-light p-4 rounded-lg space-y-3 shadow-sm">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-black border-b border-gray-200 pb-2">PRONTAS A VENCER</h4>
                         <div id="expiringContainer" class="space-y-2">
@@ -196,6 +196,15 @@
 
         function parseCSVData(rows) {
             const result = [];
+            let headerRow = null;
+
+            // Intentar detectar la fila de encabezados
+            rows.forEach(r => {
+                if (r && r.some(c => c && c.toString().toLowerCase().includes('sucursal'))) {
+                    headerRow = r.map(c => c ? c.toString().trim().toLowerCase() : '');
+                }
+            });
+
             rows.forEach(row => {
                 if (!row || row.length === 0) return;
                 const idIndex = row.findIndex(cell => cell && cell.toString().trim().startsWith('ADI-'));
@@ -210,6 +219,25 @@
                     const fecha_objetivo = row[idIndex + 8] ? row[idIndex + 8].trim() : '';
                     const fecha_inicio = row[idIndex + 9] ? row[idIndex + 9].trim() : '';
                     const estado = row[idIndex + 10] ? row[idIndex + 10].trim() : 'Publicado';
+
+                    // Búsqueda dinámica de la columna Caducidad
+                    let fecha_caducidad = '';
+                    if (headerRow) {
+                        const cadIdx = headerRow.findIndex(h => h.includes('caducidad'));
+                        if (cadIdx !== -1 && row[cadIdx]) {
+                            fecha_caducidad = row[cadIdx].trim();
+                        }
+                    }
+                    if (!fecha_caducidad) {
+                        // Buscar si existe en celdas cercanas a las fechas
+                        for (let i = idIndex + 8; i <= idIndex + 12; i++) {
+                            if (row[i] && row[i].trim().match(/\d{2,4}[-\/]\d{1,2}[-\/]\d{2,4}/) && row[i].trim() !== fecha_inicio && row[i].trim() !== fecha_objetivo) {
+                                fecha_caducidad = row[i].trim();
+                                break;
+                            }
+                        }
+                    }
+
                     const stats_url = row[idIndex + 18] ? row[idIndex + 18].trim() : '';
                     const direccion = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
                     
@@ -245,6 +273,7 @@
                         camp,
                         fecha_objetivo,
                         fecha_inicio,
+                        fecha_caducidad,
                         estado,
                         stats_url: stats_url.startsWith('http') ? stats_url : 'https://play.ar.cityscreen.cloud',
                         direccion,
@@ -331,14 +360,15 @@
                 `;
             }).join('');
 
-            // 2. PRONTAS A VENCER
+            // 2. PRONTAS A VENCER (TOMADO DE LA COLUMNA DE CADUCIDAD DEL EXCEL)
             const campGroups = {};
             const today = new Date();
 
             screensData.forEach(s => {
                 const c = s.camp.trim();
                 if (c && c !== 'Sin Campaña') {
-                    const dateStr = s.fecha_objetivo || s.fecha_inicio;
+                    // Se prioriza la nueva columna de Caducidad del Excel
+                    const dateStr = s.fecha_caducidad || s.fecha_objetivo || s.fecha_inicio;
                     let diffDays = 30;
 
                     if (dateStr && dateStr.trim() !== '') {
@@ -467,7 +497,6 @@
             document.getElementById(`${tabId}-content`).classList.remove('hidden');
         }
 
-        // Helper para convertir cadenas de fecha (YYYY-MM-DD o DD/MM/YYYY) a un Timestamp para ordenar
         function parseDateToTimestamp(dateStr) {
             if (!dateStr || dateStr.trim() === '') return 0;
             let parts = [];
@@ -504,11 +533,10 @@
                 return;
             }
 
-            // ORDENAR CAMPAÑAS DE MÁS NUEVA A MÁS VIEJA SEGÚN SU FECHA DE INICIO/PUBLICACIÓN
             const sortedGroupedEntries = Object.entries(grouped).sort((a, b) => {
                 const dateA = parseDateToTimestamp(a[1][0].fecha_inicio || a[1][0].fecha_objetivo);
                 const dateB = parseDateToTimestamp(b[1][0].fecha_inicio || b[1][0].fecha_objetivo);
-                return dateB - dateA; // Orden descendente (más nueva primero)
+                return dateB - dateA;
             });
 
             sortedGroupedEntries.forEach(([campName, items]) => {
