@@ -274,32 +274,39 @@
                         fecha_caducidad = row[caducidadColIndex].trim();
                     }
 
+                    // Columna T (idIndex + 19): Estadísticas CityScreen
                     const rawStatsUrl = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
                     const stats_url = rawStatsUrl.startsWith('http') ? rawStatsUrl : 'https://play.ar.cityscreen.cloud';
+                    
+                    // Columna U (idIndex + 20): Dirección física
                     const direccion = row[idIndex + 20] ? row[idIndex + 20].trim() : '';
 
-                    // LECTURA DE TICKETS (REVISIÓN ROBUSTA DE CELDAS DE OBSERVACIONES Y COMENTARIOS)
+                    // AISLAMIENTO RIGUROSO DE TICKETS: Únicamente analiza Observaciones técnicas (idIndex+22) y Número de Ticket (idIndex+23)
                     let ticket_info = null;
-                    const combinedObs = [
-                        row[idIndex + 16] ? row[idIndex + 16].trim() : '',
-                        row[idIndex + 21] ? row[idIndex + 21].trim() : '',
-                        row[idIndex + 22] ? row[idIndex + 22].trim() : ''
-                    ].filter(Boolean).join(' ');
+                    const ticketCol = row[idIndex + 23] ? row[idIndex + 23].trim() : '';
+                    const obsTechCol = row[idIndex + 22] ? row[idIndex + 22].trim() : '';
 
-                    if (combinedObs.length > 0) {
-                        const urlMatch = combinedObs.match(/https?:\/\/[^\s"]+/i);
-                        const ticketMatch = combinedObs.match(/#?TK-[\w\d]+/i) || combinedObs.match(/TK-[\w\d]+/i) || combinedObs.match(/Ticket\s*#?[\w\d]+/i);
+                    const combinedTicketStr = `${ticketCol} ${obsTechCol}`.trim();
 
-                        if (ticketMatch || urlMatch) {
+                    if (combinedTicketStr.length > 0) {
+                        // Buscar si existe enlace directo a Freshdesk
+                        const freshdeskUrlMatch = combinedTicketStr.match(/https?:\/\/[^\s"]*freshdesk[^\s"]*/i);
+                        const genericUrlMatch = combinedTicketStr.match(/https?:\/\/[^\s"]+/i);
+                        const ticketCodeMatch = combinedTicketStr.match(/#?TK-[\w\d]+/i) || combinedTicketStr.match(/TK-[\w\d]+/i);
+
+                        // Si existe un código o una URL que NO sea de Google Drive
+                        const validUrl = freshdeskUrlMatch ? freshdeskUrlMatch[0] : (genericUrlMatch && !genericUrlMatch[0].includes('drive.google.com') ? genericUrlMatch[0] : null);
+
+                        if (ticketCodeMatch || validUrl) {
                             let labelText = 'VER TICKET';
-                            if (ticketMatch) {
-                                labelText = ticketMatch[0].toUpperCase();
+                            if (ticketCodeMatch) {
+                                labelText = ticketCodeMatch[0].toUpperCase();
                                 if (!labelText.startsWith('#')) labelText = '#' + labelText;
                             }
 
                             ticket_info = {
                                 text: labelText,
-                                url: urlMatch ? urlMatch[0] : null
+                                url: validUrl
                             };
                         }
                     }
