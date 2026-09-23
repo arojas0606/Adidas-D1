@@ -401,7 +401,6 @@
             screensData.forEach(s => {
                 const dateStr = s.fecha_inicio || s.fecha_objetivo;
                 if (dateStr && dateStr.trim() !== '') {
-                    // Filtro estricto: Solo toma fechas correspondientes al año 2026
                     if (dateStr.startsWith('2026') || dateStr.endsWith('2026')) {
                         let monthIdx = -1;
                         if (dateStr.includes('-')) {
@@ -427,7 +426,6 @@
                 }
             });
 
-            // Ordena cronológicamente los meses activos de 2026
             const sortedMonths = Object.entries(monthCountsMap)
                 .sort((a, b) => a[1].idx - b[1].idx);
 
@@ -469,6 +467,20 @@
             document.getElementById(`${tabId}-content`).classList.remove('hidden');
         }
 
+        // Helper para convertir cadenas de fecha (YYYY-MM-DD o DD/MM/YYYY) a un Timestamp para ordenar
+        function parseDateToTimestamp(dateStr) {
+            if (!dateStr || dateStr.trim() === '') return 0;
+            let parts = [];
+            if (dateStr.includes('-')) {
+                parts = dateStr.split('-');
+                if (parts.length === 3) return new Date(parts[0], parts[1] - 1, parts[2]).getTime();
+            } else if (dateStr.includes('/')) {
+                parts = dateStr.split('/');
+                if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
+            }
+            return 0;
+        }
+
         function renderTab1(filterText = '') {
             const container = document.getElementById('campaignsContainer');
             container.innerHTML = '';
@@ -492,7 +504,14 @@
                 return;
             }
 
-            Object.entries(grouped).forEach(([campName, items]) => {
+            // ORDENAR CAMPAÑAS DE MÁS NUEVA A MÁS VIEJA SEGÚN SU FECHA DE INICIO/PUBLICACIÓN
+            const sortedGroupedEntries = Object.entries(grouped).sort((a, b) => {
+                const dateA = parseDateToTimestamp(a[1][0].fecha_inicio || a[1][0].fecha_objetivo);
+                const dateB = parseDateToTimestamp(b[1][0].fecha_inicio || b[1][0].fecha_objetivo);
+                return dateB - dateA; // Orden descendente (más nueva primero)
+            });
+
+            sortedGroupedEntries.forEach(([campName, items]) => {
                 const card = document.createElement('div');
                 card.className = "bg-light-card rounded-xl border border-light p-5 flex flex-col justify-between space-y-4 shadow-sm";
 
