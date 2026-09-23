@@ -105,7 +105,7 @@
                         </div>
                     </div>
 
-                    <!-- Módulo 2: Prontas a Vencer -->
+                    <!-- Módulo 2: Prontas a Vencer (Calculado desde Columna Caducidad) -->
                     <div class="bg-light-card border border-light p-4 rounded-lg space-y-3 shadow-sm">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-black border-b border-gray-200 pb-2">PRONTAS A VENCER</h4>
                         <div id="expiringContainer" class="space-y-2">
@@ -196,6 +196,14 @@
 
         function parseCSVData(rows) {
             const result = [];
+            let caducidadColIndex = -1;
+
+            // Búsqueda inteligente del índice de la columna "Caducidad" en la fila de encabezados
+            rows.forEach(r => {
+                if (r && r.some(c => c && c.toString().toLowerCase().includes('caducidad'))) {
+                    caducidadColIndex = r.findIndex(c => c && c.toString().toLowerCase().includes('caducidad'));
+                }
+            });
 
             rows.forEach(row => {
                 if (!row || row.length === 0) return;
@@ -212,15 +220,18 @@
                     const fecha_inicio = row[idIndex + 9] ? row[idIndex + 9].trim() : '';
                     const estado = row[idIndex + 10] ? row[idIndex + 10].trim() : 'Publicado';
 
+                    // Lectura exacta de la fecha de caducidad desde su columna dinámica
+                    let fecha_caducidad = '';
+                    if (caducidadColIndex !== -1 && row[caducidadColIndex]) {
+                        fecha_caducidad = row[caducidadColIndex].trim();
+                    }
+
                     // Columna T (idIndex + 19): Enlace de Performance
                     const rawStatsUrl = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
                     const stats_url = rawStatsUrl.startsWith('http') ? rawStatsUrl : 'https://play.ar.cityscreen.cloud';
 
                     // Columna U (idIndex + 20): Dirección física
                     const direccion = row[idIndex + 20] ? row[idIndex + 20].trim() : '';
-
-                    // Columna de Caducidad (si existe)
-                    const fecha_caducidad = row[idIndex + 22] ? row[idIndex + 22].trim() : '';
 
                     // Evaluación exclusiva para Tickets (Columna 21 de observaciones)
                     let ticket_info = null;
@@ -305,6 +316,19 @@
             document.getElementById('kpiCampaignsCount').innerText = uniqueCamps;
         }
 
+        function parseDate(dateStr) {
+            if (!dateStr || dateStr.trim() === '') return null;
+            let parts = [];
+            if (dateStr.includes('-')) {
+                parts = dateStr.split('-');
+                if (parts.length === 3) return new Date(parts[0], parts[1] - 1, parts[2]);
+            } else if (dateStr.includes('/')) {
+                parts = dateStr.split('/');
+                if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return null;
+        }
+
         function renderAnalyticsModules() {
             if (screensData.length === 0) return;
 
@@ -336,41 +360,36 @@
                 `;
             }).join('');
 
-            // 2. PRONTAS A VENCER
+            // 2. PRONTAS A VENCER (CALCULADO RIGUROSAMENTE DESDE LA COLUMNA DE CADUCIDAD)
             const campGroups = {};
             const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
             screensData.forEach(s => {
                 const c = s.camp.trim();
                 if (c && c !== 'Sin Campaña') {
+                    // Prioridad de lectura: Caducidad > Objetivo > Inicio
                     const dateStr = s.fecha_caducidad || s.fecha_objetivo || s.fecha_inicio;
-                    let diffDays = 30;
+                    const parsedDate = parseDate(dateStr);
 
-                    if (dateStr && dateStr.trim() !== '') {
-                        let parsedDate = null;
-                        if (dateStr.includes('-')) {
-                            const parts = dateStr.split('-');
-                            if (parts.length === 3) parsedDate = new Date(parts[0], parts[1] - 1, parts[2]);
-                        } else if (dateStr.includes('/')) {
-                            const parts = dateStr.split('/');
-                            if (parts.length === 3) parsedDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                    if (parsedDate) {
+                        parsedDate.setHours(0, 0, 0, 0);
+                        const timeDiff = parsedDate.getTime() - today.getTime();
+                        const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+                        // Solo considera fechas futuras o vigentes
+                        if (!campGroups[c] || diffDays < campGroups[c].days) {
+                            campGroups[c] = { 
+                                name: c, 
+                                days: diffDays, 
+                                store: s.sucursal.split('-')[0].trim().toUpperCase() 
+                            };
                         }
-
-                        if (parsedDate && !isNaN(parsedDate)) {
-                            const timeDiff = parsedDate.getTime() - today.getTime();
-                            diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                        }
-                    }
-
-                    if (!campGroups[c]) {
-                        campGroups[c] = { name: c, days: diffDays, store: s.sucursal.split('-')[0].trim().toUpperCase() };
-                    } else if (diffDays < campGroups[c].days) {
-                        campGroups[c].days = diffDays;
-                        campGroups[c].store = s.sucursal.split('-')[0].trim().toUpperCase();
                     }
                 }
             });
 
+            // Ordena las campañas por las que tienen menor cantidad de días restantes
             const sortedExpiring = Object.values(campGroups)
                 .sort((a, b) => a.days - b.days)
                 .slice(0, 3);
@@ -381,17 +400,30 @@
                 expContainer.innerHTML = `<div class="text-gray-400 text-xs w-full text-center">Sin vencimientos próximos</div>`;
             } else {
                 expContainer.innerHTML = sortedExpiring.map(item => {
-                    const displayDays = Math.abs(item.days);
-                    const isUrgent = item.days <= 7;
+                    const daysVal = item.days;
+                    const displayDays = daysVal < 0 ? 0 : daysVal;
+                    const isUrgent = daysVal <= 7;
+                    const isWarning = daysVal > 7 && daysVal <= 15;
+
+                    let borderClass = "border-gray-300";
+                    let textClass = "text-black";
+
+                    if (isUrgent) {
+                        borderClass = "border-red-500";
+                        textClass = "text-red-600";
+                    } else if (isWarning) {
+                        borderClass = "border-amber-500";
+                        textClass = "text-amber-600";
+                    }
 
                     return `
-                        <div class="bg-gray-50 p-2.5 border-l-2 ${isUrgent ? 'border-red-500' : 'border-gray-400'} flex justify-between items-center rounded-r border-t border-b border-r border-gray-200">
+                        <div class="bg-gray-50 p-2.5 border-l-2 ${borderClass} flex justify-between items-center rounded-r border-t border-b border-r border-gray-200">
                             <div class="truncate mr-2">
                                 <div class="font-bold text-xs text-black truncate">${item.name}</div>
                                 <div class="text-[9px] text-gray-500 font-semibold truncate">${item.store}</div>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span class="${isUrgent ? 'text-red-600' : 'text-black'} font-bold text-sm block leading-none">${String(displayDays).padStart(2, '0')}</span>
+                                <span class="${textClass} font-bold text-sm block leading-none">${String(displayDays).padStart(2, '0')}</span>
                                 <span class="text-[8px] text-gray-400 uppercase font-bold">DÍAS</span>
                             </div>
                         </div>
@@ -399,7 +431,7 @@
                 }).join('');
             }
 
-            // 3. LANZAMIENTOS DE CAMPAÑAS POR POSICIÓN (FILTRADO EXCLUSIVO PARA AÑO 2026)
+            // 3. LANZAMIENTOS DE CAMPAÑAS POR POSICIÓN (2026)
             const monthNamesMap = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
             const monthCountsMap = {};
 
@@ -473,16 +505,8 @@
         }
 
         function parseDateToTimestamp(dateStr) {
-            if (!dateStr || dateStr.trim() === '') return 0;
-            let parts = [];
-            if (dateStr.includes('-')) {
-                parts = dateStr.split('-');
-                if (parts.length === 3) return new Date(parts[0], parts[1] - 1, parts[2]).getTime();
-            } else if (dateStr.includes('/')) {
-                parts = dateStr.split('/');
-                if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
-            }
-            return 0;
+            const p = parseDate(dateStr);
+            return p ? p.getTime() : 0;
         }
 
         function renderTab1(filterText = '') {
