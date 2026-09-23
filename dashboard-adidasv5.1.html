@@ -105,7 +105,7 @@
                         </div>
                     </div>
 
-                    <!-- Módulo 2: Prontas a Vencer (Basado en la Columna Caducidad) -->
+                    <!-- Módulo 2: Prontas a Vencer -->
                     <div class="bg-light-card border border-light p-4 rounded-lg space-y-3 shadow-sm">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-black border-b border-gray-200 pb-2">PRONTAS A VENCER</h4>
                         <div id="expiringContainer" class="space-y-2">
@@ -113,9 +113,9 @@
                         </div>
                     </div>
 
-                    <!-- Módulo 3: Lanzamientos por Mes (Solo 2026) -->
+                    <!-- Módulo 3: Título Actualizado a "LANZAMIENTOS DE CAMPAÑA POR POSICIÓN" -->
                     <div class="bg-light-card border border-light p-4 rounded-lg space-y-3 shadow-sm">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-black border-b border-gray-200 pb-2">LANZAMIENTOS POR MES (2026)</h4>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-black border-b border-gray-200 pb-2">LANZAMIENTOS DE CAMPAÑA POR POSICIÓN</h4>
                         <div id="launchesContainer" class="flex items-end justify-between h-28 pt-4 px-2">
                             <div class="text-gray-400 text-xs w-full text-center">Cargando cronograma...</div>
                         </div>
@@ -198,7 +198,6 @@
             const result = [];
             let headerRow = null;
 
-            // Intentar detectar la fila de encabezados
             rows.forEach(r => {
                 if (r && r.some(c => c && c.toString().toLowerCase().includes('sucursal'))) {
                     headerRow = r.map(c => c ? c.toString().trim().toLowerCase() : '');
@@ -220,6 +219,20 @@
                     const fecha_inicio = row[idIndex + 9] ? row[idIndex + 9].trim() : '';
                     const estado = row[idIndex + 10] ? row[idIndex + 10].trim() : 'Publicado';
 
+                    // Lectura estricta de la dirección (idIndex + 19)
+                    let direccion = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
+                    // Si por algún desfasaje de columna la dirección viene con un link, lo descartamos
+                    if (direccion.startsWith('http://') || direccion.startsWith('https://')) {
+                        direccion = '';
+                    }
+
+                    // Lectura de la URL de Performance (stats_url en idIndex + 18) con validación estricta de protocolo HTTP/HTTPS
+                    let raw_stats_url = row[idIndex + 18] ? row[idIndex + 18].trim() : '';
+                    let stats_url = 'https://play.ar.cityscreen.cloud';
+                    if (raw_stats_url.startsWith('http://') || raw_stats_url.startsWith('https://')) {
+                        stats_url = raw_stats_url;
+                    }
+
                     // Búsqueda dinámica de la columna Caducidad
                     let fecha_caducidad = '';
                     if (headerRow) {
@@ -229,7 +242,6 @@
                         }
                     }
                     if (!fecha_caducidad) {
-                        // Buscar si existe en celdas cercanas a las fechas
                         for (let i = idIndex + 8; i <= idIndex + 12; i++) {
                             if (row[i] && row[i].trim().match(/\d{2,4}[-\/]\d{1,2}[-\/]\d{2,4}/) && row[i].trim() !== fecha_inicio && row[i].trim() !== fecha_objetivo) {
                                 fecha_caducidad = row[i].trim();
@@ -238,21 +250,14 @@
                         }
                     }
 
-                    const stats_url = row[idIndex + 18] ? row[idIndex + 18].trim() : '';
-                    const direccion = row[idIndex + 19] ? row[idIndex + 19].trim() : '';
-                    
-                    // LECTURA DINÁMICA DE TICKET DESDE EXCEL
+                    // LECTURA ESTRICTA DE TICKET ABIERTO (Evita falsos positivos)
                     let ticket_info = null;
-                    const possibleObs = [
-                        row[idIndex + 16] ? row[idIndex + 16].trim() : '',
-                        row[idIndex + 21] ? row[idIndex + 21].trim() : '',
-                        row[idIndex + 22] ? row[idIndex + 22].trim() : '',
-                        row[idIndex + 23] ? row[idIndex + 23].trim() : ''
-                    ].filter(str => str !== '').join(' ');
-
-                    if (possibleObs.length > 0 && (possibleObs.includes('TK-') || possibleObs.includes('http') || possibleObs.includes('freshdesk'))) {
-                        const urlMatch = possibleObs.match(/https?:\/\/[^\s"]+/);
-                        const ticketMatch = possibleObs.match(/#?TK-[\w\d]+/i) || possibleObs.match(/TK-[\w\d]+/i);
+                    const ticketCol = row[idIndex + 21] ? row[idIndex + 21].trim() : '';
+                    
+                    // Solo toma la celda si contiene explícitamente "TK-" o un enlace de "freshdesk"
+                    if (ticketCol.includes('TK-') || ticketCol.toLowerCase().includes('freshdesk')) {
+                        const urlMatch = ticketCol.match(/https?:\/\/[^\s"]+/);
+                        const ticketMatch = ticketCol.match(/#?TK-[\w\d]+/i) || ticketCol.match(/TK-[\w\d]+/i);
                         
                         ticket_info = {
                             text: ticketMatch ? (ticketMatch[0].startsWith('#') ? ticketMatch[0] : '#' + ticketMatch[0]) : 'VER TICKET',
@@ -260,7 +265,7 @@
                         };
                     }
 
-                    // Estado controlado manualmente por Excel
+                    // Estado controlado manualmente en el Excel
                     const isManualOffline = estado.toLowerCase().includes('off') || estado.toLowerCase().includes('paus') || estado.toLowerCase().includes('caid');
 
                     result.push({
@@ -275,7 +280,7 @@
                         fecha_inicio,
                         fecha_caducidad,
                         estado,
-                        stats_url: stats_url.startsWith('http') ? stats_url : 'https://play.ar.cityscreen.cloud',
+                        stats_url,
                         direccion,
                         status: isManualOffline ? 'Offline' : 'Online',
                         ticket: ticket_info
@@ -360,14 +365,13 @@
                 `;
             }).join('');
 
-            // 2. PRONTAS A VENCER (TOMADO DE LA COLUMNA DE CADUCIDAD DEL EXCEL)
+            // 2. PRONTAS A VENCER
             const campGroups = {};
             const today = new Date();
 
             screensData.forEach(s => {
                 const c = s.camp.trim();
                 if (c && c !== 'Sin Campaña') {
-                    // Se prioriza la nueva columna de Caducidad del Excel
                     const dateStr = s.fecha_caducidad || s.fecha_objetivo || s.fecha_inicio;
                     let diffDays = 30;
 
@@ -424,7 +428,7 @@
                 }).join('');
             }
 
-            // 3. LANZAMIENTOS POR MES (FILTRADO EXCLUSIVO PARA EL AÑO 2026)
+            // 3. LANZAMIENTOS DE CAMPAÑA POR POSICIÓN (FILTRADO 2026)
             const monthNamesMap = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
             const monthCountsMap = {};
 
@@ -552,7 +556,7 @@
                     </div>
                 `).join('');
 
-                const statsUrl = items[0].stats_url || 'https://play.ar.cityscreen.cloud';
+                const statsUrl = items[0].stats_url;
 
                 card.innerHTML = `
                     <div>
@@ -603,7 +607,7 @@
                     <td class="p-3.5 font-black text-black whitespace-nowrap">${s.id}</td>
                     <td class="p-3.5">
                         <div class="font-black text-black">${s.sucursal}</div>
-                        <div class="text-[10px] text-gray-500 font-medium">${s.direccion}</div>
+                        ${s.direccion ? `<div class="text-[10px] text-gray-500 font-medium">${s.direccion}</div>` : ''}
                     </td>
                     <td class="p-3.5">
                         <div class="font-bold text-black">${s.pantalla}</div>
