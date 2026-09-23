@@ -94,7 +94,7 @@
                     </div>
                 </div>
 
-                <!-- Fila de 3 Módulos Analíticos Light -->
+                <!-- Fila de 3 Módulos Analíticos 100% Dinámicos desde Excel -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     
                     <!-- Módulo 1: Top Posiciones x Campaña -->
@@ -207,6 +207,7 @@
                     const res = row[idIndex + 4] ? row[idIndex + 4].trim() : '1080x1920';
                     const ubicacion = row[idIndex + 5] ? row[idIndex + 5].trim() : 'En local';
                     const camp = row[idIndex + 6] ? row[idIndex + 6].trim() : 'Sin Campaña';
+                    const fecha_objetivo = row[idIndex + 8] ? row[idIndex + 8].trim() : '';
                     const fecha_inicio = row[idIndex + 9] ? row[idIndex + 9].trim() : '';
                     const estado = row[idIndex + 10] ? row[idIndex + 10].trim() : 'Publicado';
                     const stats_url = row[idIndex + 18] ? row[idIndex + 18].trim() : '';
@@ -242,6 +243,7 @@
                         res,
                         ubicacion,
                         camp,
+                        fecha_objetivo,
                         fecha_inicio,
                         estado,
                         stats_url: stats_url.startsWith('http') ? stats_url : 'https://play.ar.cityscreen.cloud',
@@ -301,7 +303,7 @@
         function renderAnalyticsModules() {
             if (screensData.length === 0) return;
 
-            // 1. TOP POSICIONES X CAMPAÑA
+            // 1. TOP POSICIONES X CAMPAÑA (Dato 100% dinámico agrupando por campaña)
             const campCounts = {};
             screensData.forEach(s => {
                 const c = s.camp.trim();
@@ -329,50 +331,83 @@
                 `;
             }).join('');
 
-            // 2. PRONTAS A VENCER
+            // 2. PRONTAS A VENCER (Dato 100% dinámico comparando fechas del Excel con la fecha actual)
             const campGroups = {};
+            const today = new Date();
+
             screensData.forEach(s => {
                 const c = s.camp.trim();
                 if (c && c !== 'Sin Campaña') {
-                    if (!campGroups[c]) campGroups[c] = { name: c, date: s.fecha_inicio, stores: new Set() };
-                    campGroups[c].stores.add(s.sucursal.split('-')[0].trim().toUpperCase());
+                    const dateStr = s.fecha_objetivo || s.fecha_inicio;
+                    let diffDays = 30; // Valor por defecto si no hay fecha cargada
+
+                    if (dateStr && dateStr.trim() !== '') {
+                        let parsedDate = null;
+                        if (dateStr.includes('-')) {
+                            const parts = dateStr.split('-');
+                            if (parts.length === 3) parsedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+                        } else if (dateStr.includes('/')) {
+                            const parts = dateStr.split('/');
+                            if (parts.length === 3) parsedDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                        }
+
+                        if (parsedDate && !isNaN(parsedDate)) {
+                            const timeDiff = parsedDate.getTime() - today.getTime();
+                            diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                        }
+                    }
+
+                    if (!campGroups[c]) {
+                        campGroups[c] = { name: c, days: diffDays, store: s.sucursal.split('-')[0].trim().toUpperCase() };
+                    } else if (diffDays < campGroups[c].days) {
+                        campGroups[c].days = diffDays;
+                        campGroups[c].store = s.sucursal.split('-')[0].trim().toUpperCase();
+                    }
                 }
             });
 
+            // Ordena las campañas por las más cercanas a vencer (o días restantes)
+            const sortedExpiring = Object.values(campGroups)
+                .sort((a, b) => a.days - b.days)
+                .slice(0, 3);
+
             const expContainer = document.getElementById('expiringContainer');
-            const expList = Object.values(campGroups).slice(0, 3);
 
-            expContainer.innerHTML = expList.map((item, idx) => {
-                const days = [5, 12, 18][idx] || 20;
-                const isUrgent = days <= 7;
-                const storesText = Array.from(item.stores).join(' / ');
+            if (sortedExpiring.length === 0) {
+                expContainer.innerHTML = `<div class="text-gray-400 text-xs w-full text-center">Sin vencimientos próximos</div>`;
+            } else {
+                expContainer.innerHTML = sortedExpiring.map(item => {
+                    const displayDays = Math.abs(item.days);
+                    const isUrgent = item.days <= 7;
 
-                return `
-                    <div class="bg-gray-50 p-2.5 border-l-2 ${isUrgent ? 'border-red-500' : 'border-gray-400'} flex justify-between items-center rounded-r border-t border-b border-r border-gray-200">
-                        <div class="truncate mr-2">
-                            <div class="font-bold text-xs text-black truncate">${item.name}</div>
-                            <div class="text-[9px] text-gray-500 font-semibold truncate">${storesText}</div>
+                    return `
+                        <div class="bg-gray-50 p-2.5 border-l-2 ${isUrgent ? 'border-red-500' : 'border-gray-400'} flex justify-between items-center rounded-r border-t border-b border-r border-gray-200">
+                            <div class="truncate mr-2">
+                                <div class="font-bold text-xs text-black truncate">${item.name}</div>
+                                <div class="text-[9px] text-gray-500 font-semibold truncate">${item.store}</div>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <span class="${isUrgent ? 'text-red-600' : 'text-black'} font-bold text-sm block leading-none">${String(displayDays).padStart(2, '0')}</span>
+                                <span class="text-[8px] text-gray-400 uppercase font-bold">DÍAS</span>
+                            </div>
                         </div>
-                        <div class="text-right flex-shrink-0">
-                            <span class="${isUrgent ? 'text-red-600' : 'text-black'} font-bold text-sm block leading-none">${String(days).padStart(2, '0')}</span>
-                            <span class="text-[8px] text-gray-400 uppercase font-bold">DÍAS</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+            }
 
             // 3. LANZAMIENTOS POR MES (VINCULADO DINÁMICAMENTE A FECHA DE PUBLICACIÓN)
             const monthNamesMap = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
             const monthCountsMap = {};
 
             screensData.forEach(s => {
-                if (s.fecha_inicio && s.fecha_inicio.trim() !== '') {
+                const dateStr = s.fecha_inicio || s.fecha_objetivo;
+                if (dateStr && dateStr.trim() !== '') {
                     let monthIdx = -1;
-                    if (s.fecha_inicio.includes('-')) {
-                        const parts = s.fecha_inicio.split('-');
+                    if (dateStr.includes('-')) {
+                        const parts = dateStr.split('-');
                         if (parts.length === 3) monthIdx = parseInt(parts[1], 10) - 1;
-                    } else if (s.fecha_inicio.includes('/')) {
-                        const parts = s.fecha_inicio.split('/');
+                    } else if (dateStr.includes('/')) {
+                        const parts = dateStr.split('/');
                         if (parts.length === 3) monthIdx = parseInt(parts[1], 10) - 1;
                     }
 
