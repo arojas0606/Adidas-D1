@@ -212,7 +212,6 @@
 
         let screensData = [];
 
-        // LÓGICA CONMUTACIÓN DE TEMA DARK / LIGHT
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'light') {
@@ -279,17 +278,30 @@
                     const stats_url = rawStatsUrl.startsWith('http') ? rawStatsUrl : 'https://play.ar.cityscreen.cloud';
                     const direccion = row[idIndex + 20] ? row[idIndex + 20].trim() : '';
 
+                    // LECTURA DE TICKETS (REVISIÓN ROBUSTA DE CELDAS DE OBSERVACIONES Y COMENTARIOS)
                     let ticket_info = null;
-                    const ticketCol = row[idIndex + 21] ? row[idIndex + 21].trim() : '';
+                    const combinedObs = [
+                        row[idIndex + 16] ? row[idIndex + 16].trim() : '',
+                        row[idIndex + 21] ? row[idIndex + 21].trim() : '',
+                        row[idIndex + 22] ? row[idIndex + 22].trim() : ''
+                    ].filter(Boolean).join(' ');
 
-                    if (ticketCol.length > 0 && (ticketCol.includes('#TK-') || ticketCol.includes('freshdesk.com'))) {
-                        const urlMatch = ticketCol.match(/https?:\/\/[^\s"]+/);
-                        const ticketMatch = ticketCol.match(/#?TK-[\w\d]+/i);
-                        
-                        ticket_info = {
-                            text: ticketMatch ? (ticketMatch[0].startsWith('#') ? ticketMatch[0] : '#' + ticketMatch[0]) : 'VER TICKET',
-                            url: urlMatch ? urlMatch[0] : null
-                        };
+                    if (combinedObs.length > 0) {
+                        const urlMatch = combinedObs.match(/https?:\/\/[^\s"]+/i);
+                        const ticketMatch = combinedObs.match(/#?TK-[\w\d]+/i) || combinedObs.match(/TK-[\w\d]+/i) || combinedObs.match(/Ticket\s*#?[\w\d]+/i);
+
+                        if (ticketMatch || urlMatch) {
+                            let labelText = 'VER TICKET';
+                            if (ticketMatch) {
+                                labelText = ticketMatch[0].toUpperCase();
+                                if (!labelText.startsWith('#')) labelText = '#' + labelText;
+                            }
+
+                            ticket_info = {
+                                text: labelText,
+                                url: urlMatch ? urlMatch[0] : null
+                            };
+                        }
                     }
 
                     const isManualOffline = estado.toLowerCase().includes('off') || estado.toLowerCase().includes('paus') || estado.toLowerCase().includes('caid');
