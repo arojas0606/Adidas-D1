@@ -150,8 +150,8 @@
                 <div class="bg-light-card rounded-xl border border-light overflow-x-auto shadow-sm">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-100 text-gray-600 text-[11px] uppercase tracking-wider font-bold border-b border-gray-200">
-                                <th class="p-3.5">ID</th>
+                            <tr class="bg-gray-100 text-gray-700 text-[11px] uppercase tracking-wider font-bold border-b border-gray-200">
+                                <th class="p-3.5 whitespace-nowrap">ID</th>
                                 <th class="p-3.5">Sucursal / Dirección</th>
                                 <th class="p-3.5">Detalle Técnico Pantalla</th>
                                 <th class="p-3.5">Ubicación en Tienda</th>
@@ -316,9 +316,9 @@
                 const pct = Math.round((count / maxVal) * 100);
                 return `
                     <div>
-                        <div class="flex justify-between font-bold text-gray-700 mb-1">
+                        <div class="flex justify-between font-bold text-gray-800 mb-1">
                             <span class="truncate max-w-[180px]">${name}</span>
-                            <span class="text-black">${count}</span>
+                            <span class="text-black font-black">${count}</span>
                         </div>
                         <div class="w-full bg-gray-200 h-1.5 rounded-full">
                             <div class="bg-black h-1.5 rounded-full" style="width: ${pct}%"></div>
@@ -437,7 +437,7 @@
                 items.forEach(s => storesSet.add(s.sucursal.toUpperCase()));
 
                 let storesHtml = Array.from(storesSet).map(storeStr => `
-                    <div class="py-2.5 border-b border-gray-100 text-xs font-bold tracking-wider text-gray-700">
+                    <div class="py-2.5 border-b border-gray-100 text-xs font-bold tracking-wider text-black">
                         ${storeStr}
                     </div>
                 `).join('');
@@ -452,7 +452,7 @@
                                 PERFORMANCE REAL TIME <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-1"></i>
                             </a>
                         </div>
-                        <div class="inline-block bg-date-pill text-gray-600 text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider mb-4 border border-gray-200">
+                        <div class="inline-block bg-date-pill text-gray-700 text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider mb-4 border border-gray-200">
                             INICIO: ${items[0].fecha_inicio}
                         </div>
                         <div class="mt-2 space-y-1">
@@ -479,7 +479,7 @@
                 const tr = document.createElement('tr');
                 tr.className = "border-t border-gray-200 hover:bg-gray-50 transition text-xs";
                 
-                let ticketBtnHtml = `<button onclick="openTicketModal('${s.id}', '${s.sucursal}')" class="text-gray-600 hover:text-black text-[10px] bg-gray-100 border border-gray-300 px-2.5 py-1 rounded font-bold uppercase tracking-wider transition"><i class="fa-solid fa-plus mr-1"></i> Crear Ticket</button>`;
+                let ticketBtnHtml = `<button onclick="openTicketModal('${s.id}', '${s.sucursal}')" class="text-gray-700 hover:text-black text-[10px] bg-gray-100 border border-gray-300 px-2.5 py-1 rounded font-bold uppercase tracking-wider transition"><i class="fa-solid fa-plus mr-1"></i> Crear Ticket</button>`;
                 
                 if (s.ticket) {
                     if (s.ticket.url) {
@@ -490,16 +490,16 @@
                 }
 
                 tr.innerHTML = `
-                    <td class="p-3.5 font-black text-black">${s.id}</td>
+                    <td class="p-3.5 font-black text-black whitespace-nowrap">${s.id}</td>
                     <td class="p-3.5">
-                        <div class="font-bold text-gray-800">${s.sucursal}</div>
-                        <div class="text-[10px] text-gray-400">${s.direccion}</div>
+                        <div class="font-black text-black">${s.sucursal}</div>
+                        <div class="text-[10px] text-gray-500 font-medium">${s.direccion}</div>
                     </td>
                     <td class="p-3.5">
-                        <div class="font-medium text-gray-700">${s.pantalla}</div>
-                        <div class="text-[10px] text-gray-400">${s.res} | ${s.orientacion}</div>
+                        <div class="font-bold text-black">${s.pantalla}</div>
+                        <div class="text-[10px] text-gray-500 font-medium">${s.res} | ${s.orientacion}</div>
                     </td>
-                    <td class="p-3.5 text-gray-500">${s.ubicacion}</td>
+                    <td class="p-3.5 text-gray-900 font-semibold">${s.ubicacion}</td>
                     <td class="p-3.5"><span class="bg-gray-100 text-black border border-gray-300 px-2.5 py-1 rounded font-bold text-[10px] uppercase tracking-wider">${s.camp}</span></td>
                     <td class="p-3.5">${getPlayerStatusBadge(s.status)}</td>
                     <td class="p-3.5">${ticketBtnHtml}</td>
@@ -516,7 +516,7 @@
                     <div class="font-bold text-amber-800 flex items-center gap-2">
                         <i class="fa-solid fa-triangle-exclamation"></i> TICKET ABIERTO: ${ticketInfo}
                     </div>
-                    <p class="text-gray-700 text-[11px]">
+                    <p class="text-gray-800 text-[11px]">
                         Esta posición <strong>${id}</strong> (${screen ? screen.sucursal : 'Tienda'}) tiene una incidencia técnica registrada en el planificador.
                     </p>
                     <div class="text-[10px] text-gray-500 pt-2 border-t border-amber-200 flex justify-between">
@@ -536,7 +536,7 @@
             const content = document.getElementById('ticketContent');
             content.innerHTML = `
                 <div class="space-y-3">
-                    <p class="text-gray-700">Crear incidencia técnica para <strong>${screen.id}</strong> (${screen.sucursal}).</p>
+                    <p class="text-gray-800">Crear incidencia técnica para <strong>${screen.id}</strong> (${screen.sucursal}).</p>
                     <textarea id="ticketTextarea" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-black focus:ring-1 focus:ring-black outline-none text-xs" rows="3" placeholder="Describe la falla observada..."></textarea>
                     <button id="btnSubmitTicket" onclick="submitTicket('${screen.id}', '${screen.sucursal}')" class="w-full bg-black text-white py-2 rounded-lg font-bold uppercase tracking-wider hover:bg-gray-800 transition">Registrar Incidencia</button>
                 </div>
@@ -577,7 +577,7 @@
                         <div class="font-black text-sm uppercase tracking-wider text-black">
                             INCIDENCIA REGISTRADA CON ÉXITO
                         </div>
-                        <p class="text-[11px] text-gray-700 leading-relaxed">
+                        <p class="text-[11px] text-gray-800 leading-relaxed">
                             REGISTRO CREADO PARA LA POSICIÓN <strong class="text-black">${id}</strong>. SE HA ENVIADO UN CORREO ELECTRÓNICO CON LOS DETALLES DEL TICKET Y SU ENLACE DE SEGUIMIENTO.
                         </p>
                         <div class="text-[10px] text-gray-500 pt-2 border-t border-emerald-200">
