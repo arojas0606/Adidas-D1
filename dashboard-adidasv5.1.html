@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adidas - Digital Display Manager 2026 (Light)</title>
+    <title>Adidas - Digital Display Manager 2026 (v5.1 Light)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -113,9 +113,9 @@
                         </div>
                     </div>
 
-                    <!-- Módulo 3: Lanzamientos por Mes -->
+                    <!-- Módulo 3: Lanzamientos por Mes (Solo 2026) -->
                     <div class="bg-light-card border border-light p-4 rounded-lg space-y-3 shadow-sm">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-black border-b border-gray-200 pb-2">LANZAMIENTOS POR MES</h4>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-black border-b border-gray-200 pb-2">LANZAMIENTOS POR MES (2026)</h4>
                         <div id="launchesContainer" class="flex items-end justify-between h-28 pt-4 px-2">
                             <div class="text-gray-400 text-xs w-full text-center">Cargando cronograma...</div>
                         </div>
@@ -303,7 +303,7 @@
         function renderAnalyticsModules() {
             if (screensData.length === 0) return;
 
-            // 1. TOP POSICIONES X CAMPAÑA (Dato 100% dinámico agrupando por campaña)
+            // 1. TOP POSICIONES X CAMPAÑA
             const campCounts = {};
             screensData.forEach(s => {
                 const c = s.camp.trim();
@@ -331,7 +331,7 @@
                 `;
             }).join('');
 
-            // 2. PRONTAS A VENCER (Dato 100% dinámico comparando fechas del Excel con la fecha actual)
+            // 2. PRONTAS A VENCER
             const campGroups = {};
             const today = new Date();
 
@@ -339,7 +339,7 @@
                 const c = s.camp.trim();
                 if (c && c !== 'Sin Campaña') {
                     const dateStr = s.fecha_objetivo || s.fecha_inicio;
-                    let diffDays = 30; // Valor por defecto si no hay fecha cargada
+                    let diffDays = 30;
 
                     if (dateStr && dateStr.trim() !== '') {
                         let parsedDate = null;
@@ -366,7 +366,6 @@
                 }
             });
 
-            // Ordena las campañas por las más cercanas a vencer (o días restantes)
             const sortedExpiring = Object.values(campGroups)
                 .sort((a, b) => a.days - b.days)
                 .slice(0, 3);
@@ -395,40 +394,47 @@
                 }).join('');
             }
 
-            // 3. LANZAMIENTOS POR MES (VINCULADO DINÁMICAMENTE A FECHA DE PUBLICACIÓN)
+            // 3. LANZAMIENTOS POR MES (FILTRADO EXCLUSIVO PARA EL AÑO 2026)
             const monthNamesMap = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
             const monthCountsMap = {};
 
             screensData.forEach(s => {
                 const dateStr = s.fecha_inicio || s.fecha_objetivo;
                 if (dateStr && dateStr.trim() !== '') {
-                    let monthIdx = -1;
-                    if (dateStr.includes('-')) {
-                        const parts = dateStr.split('-');
-                        if (parts.length === 3) monthIdx = parseInt(parts[1], 10) - 1;
-                    } else if (dateStr.includes('/')) {
-                        const parts = dateStr.split('/');
-                        if (parts.length === 3) monthIdx = parseInt(parts[1], 10) - 1;
-                    }
+                    // Filtro estricto: Solo toma fechas correspondientes al año 2026
+                    if (dateStr.startsWith('2026') || dateStr.endsWith('2026')) {
+                        let monthIdx = -1;
+                        if (dateStr.includes('-')) {
+                            const parts = dateStr.split('-');
+                            if (parts.length === 3) {
+                                monthIdx = dateStr.startsWith('2026') ? parseInt(parts[1], 10) - 1 : parseInt(parts[0], 10) - 1;
+                            }
+                        } else if (dateStr.includes('/')) {
+                            const parts = dateStr.split('/');
+                            if (parts.length === 3) {
+                                monthIdx = dateStr.endsWith('2026') ? parseInt(parts[1], 10) - 1 : parseInt(parts[0], 10) - 1;
+                            }
+                        }
 
-                    if (monthIdx >= 0 && monthIdx < 12) {
-                        const mName = monthNamesMap[monthIdx];
-                        monthCountsMap[mName] = {
-                            count: (monthCountsMap[mName] ? monthCountsMap[mName].count : 0) + 1,
-                            idx: monthIdx
-                        };
+                        if (monthIdx >= 0 && monthIdx < 12) {
+                            const mName = monthNamesMap[monthIdx];
+                            monthCountsMap[mName] = {
+                                count: (monthCountsMap[mName] ? monthCountsMap[mName].count : 0) + 1,
+                                idx: monthIdx
+                            };
+                        }
                     }
                 }
             });
 
-            // Ordenar los meses de forma cronológica
+            // Ordena cronológicamente los meses activos de 2026
             const sortedMonths = Object.entries(monthCountsMap)
                 .sort((a, b) => a[1].idx - b[1].idx);
 
             const launchesContainer = document.getElementById('launchesContainer');
 
             if (sortedMonths.length === 0) {
-                launchesContainer.innerHTML = `<div class="text-gray-400 text-xs w-full text-center">Sin fechas registradas</div>`;
+                launchesContainer.innerHTML = `<div class="text-gray-400 text-xs w-full text-center">Sin lanzamientos en 2026</div>`;
                 return;
             }
 
